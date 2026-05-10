@@ -319,6 +319,89 @@ export default async function TeasPage() {
 
 ---
 
+## Server Actions
+
+A Server Action is a function that runs on the server, called directly from a React form or Client Component — no API endpoint needed.
+
+```ts
+// src/app/actions.ts
+'use server';
+
+export const myAction = async (prevState: FormState, formData: FormData) => {
+  // runs on server — can query DB, redirect, etc.
+  redirect('/somewhere');
+};
+```
+
+### vs Route Handlers
+
+| | Server Action | Route Handler |
+|---|---|---|
+| Callable from | React forms / Client Components | Anywhere (browser, mobile, third-party) |
+| Public HTTP endpoint | No | Yes |
+| Receives | `FormData` | `Request` |
+| Best for | Internal mutations | Public APIs |
+
+### Pattern with `useActionState`
+
+```tsx
+'use client';
+import { useActionState } from 'react';
+import { myAction } from '../actions';
+
+export default function MyForm() {
+  const [state, formAction, isPending] = useActionState(myAction, { errors: {} });
+
+  return (
+    <form action={formAction}>
+      <input name="name" defaultValue={state.values?.name} />
+      {state.errors?.name && <span>{state.errors.name}</span>}
+      <button disabled={isPending}>Submit</button>
+    </form>
+  );
+}
+```
+
+- `useActionState` wires the action to the form and gives you pending state
+- `defaultValue` preserves field values when the action returns an error
+- `isPending` disables the submit button while the action runs
+
+### Type-safe FormData extraction
+
+`formData.get()` returns `FormDataEntryValue | null` (includes `File`). Use a helper to narrow safely without casting:
+
+```ts
+const getString = (fd: FormData, key: string): string | undefined => {
+  const val = fd.get(key);
+  return typeof val === 'string' && val.length > 0 ? val : undefined;
+};
+```
+
+- `typeof val === 'string'` excludes `File` and `null`
+- `val.length > 0` converts empty strings to `undefined` — so optional inputs aren't saved as `""`
+
+### Per-field validation errors with zod
+
+```ts
+type FormValues = z.infer<typeof schema>;
+type FormState = {
+  errors?: Partial<Record<keyof FormValues, string>>;
+  values?: FormValues;
+};
+
+if (!parsedData.success) {
+  const fieldErrors = parsedData.error.flatten().fieldErrors;
+  return {
+    errors: { name: fieldErrors.name?.[0], type: fieldErrors.type?.[0] },
+    values: raw,
+  };
+}
+```
+
+Use `z.infer<typeof schema>` for form-related types — not the Prisma model, which has `id`, `createdAt`, etc. that the form doesn't know about.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
