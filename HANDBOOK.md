@@ -177,11 +177,14 @@ tea.name; // safe, no ! needed
 
 Always use `<Link>` for internal navigation.
 
+In Next.js 16, the server generates a full HTML response for **all** navigations — initial and subsequent. The difference between `<Link>` and `<a>` is not the network response format, it's what happens in the browser when that response arrives:
+
 | | `<a>` | `<Link>` |
 |---|---|---|
-| Navigation | Full page reload | Client-side, instant |
+| Browser behavior | Full navigation — unloads document, re-executes all scripts, resets scroll | JavaScript intercepts click, no browser navigation event |
+| Shared layouts | Destroyed and rebuilt | Stay in DOM, untouched |
 | JS state | Lost | Preserved |
-| Prefetching | None | Automatic (on viewport entry) |
+| Prefetching | None | Automatic (on viewport entry in dev; on hover or viewport in prod) |
 
 ```tsx
 import Link from "next/link";
