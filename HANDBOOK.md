@@ -134,6 +134,62 @@ A CSS transformation pipeline. In this project it exists solely to process Tailw
 
 ---
 
+## Data fetching in Server Components
+
+Server Components can import data directly — no `useEffect`, no `fetch` to your own API. Just import and use:
+
+```ts
+// src/lib/teas.ts — plain data module, later replaced by a DB query
+const teas = [{ id: "1", name: "Green Tea", type: "green", origin: "China" }];
+export default teas;
+```
+
+```tsx
+// src/app/teas/page.tsx — Server Component, no "use client"
+import teas from "@/lib/teas";
+
+export default function TeasPage() {
+  return <ul>{teas.map(t => <li key={t.id}>{t.name}</li>)}</ul>;
+}
+```
+
+This works because the component runs on the server — the import never reaches the browser.
+
+---
+
+## `notFound()`
+
+Call `notFound()` when a resource doesn't exist. It throws internally (return type is `never`), so no `return` is needed after it. Execution stops immediately.
+
+```tsx
+const tea = teas.find(t => t.id === id);
+if (!tea) notFound();
+// TypeScript knows tea is defined here — notFound() narrows the type
+tea.name; // safe, no ! needed
+```
+
+- Must be called in a **Server Component** or a server-side function. Calling it in a Client Component won't be caught correctly by the framework.
+- Renders `src/app/not-found.tsx` (or the nearest one up the tree). Without that file, Next.js shows its default 404 page.
+
+---
+
+## `next/link` vs `<a>`
+
+Always use `<Link>` for internal navigation.
+
+| | `<a>` | `<Link>` |
+|---|---|---|
+| Navigation | Full page reload | Client-side, instant |
+| JS state | Lost | Preserved |
+| Prefetching | None | Automatic (on viewport entry) |
+
+```tsx
+import Link from "next/link";
+<Link href={`/teas/${tea.id}`}>{tea.name}</Link>
+```
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
