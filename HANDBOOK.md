@@ -56,14 +56,31 @@ src/app/
 
 ### Dynamic segments
 
-`[id]` in a folder name = a dynamic URL segment. The value is available as a prop:
+`[id]` in a folder name = a dynamic URL segment. In Next.js 15+, `params` is a **Promise** — the component must be `async`:
 
 ```tsx
 // src/app/teas/[id]/page.tsx
-export default async function TeaPage({ params }: { params: { id: string } }) {
-  return <h1>Tea {params.id}</h1>
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default async function TeaPage({ params }: Props) {
+  const { id } = await params;
+  return <h1>Tea {id}</h1>
 }
 ```
+
+Many tutorials still show the old synchronous form — it's outdated. Always await params.
+
+### Reading route params — which API to use
+
+| Situation | API |
+|---|---|
+| Server Component, needs route param | `params` prop (async, awaited) |
+| Client Component, needs route param | `useParams()` hook |
+| Client Component, needs to navigate programmatically | `useRouter()` hook |
+
+`useRouter` does **not** give you route params. It's for navigation only (push, back, replace).
 
 ### Nested layouts
 
