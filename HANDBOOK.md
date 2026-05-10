@@ -215,6 +215,110 @@ import Link from "next/link";
 
 ---
 
+## Database — Prisma 7 + PostgreSQL
+
+### Local dev setup
+
+Docker is the standard way to run Postgres locally:
+
+```bash
+docker run -d \
+  --name teapot-db \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=teapot \
+  -p 5432:5432 \
+  postgres:16
+```
+
+`.env`:
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/teapot"
+```
+
+### Prisma 7 config pattern
+
+Prisma 7 removed `url` from `schema.prisma`. Connection config lives in `prisma.config.ts`:
+
+```ts
+// prisma.config.ts
+import "dotenv/config";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: { path: "prisma/migrations", seed: "tsx prisma/seed.ts" },
+  datasource: { url: process.env["DATABASE_URL"] },
+});
+```
+
+The `datasource` block in schema only needs `provider`:
+```prisma
+datasource db {
+    provider = "postgresql"
+}
+```
+
+### PrismaClient — singleton pattern
+
+In Next.js dev mode, HMR re-evaluates modules on every file save. Without a singleton, each save creates a new `PrismaClient` with a new connection pool — you exhaust Postgres's connection limit quickly.
+
+The fix: store the client on `globalThis`, which survives HMR:
+
+```ts
+import { PrismaClient } from '@/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
+
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+
+const adapter = new PrismaPg(new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+}));
+
+const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+export default prisma;
+```
+
+Prisma 7 requires an `adapter` — `PrismaClient` cannot be constructed without one.
+
+### Schema and migrations
+
+```prisma
+model Tea {
+    id        String   @id @default(uuid())
+    name      String
+    type      String
+    origin    String?
+    storeUrl  String?
+    createdAt DateTime @default(now())
+}
+```
+
+```bash
+pnpm exec prisma migrate dev --name init   # create migration + apply
+pnpm exec tsx prisma/seed.ts               # run seed directly
+```
+
+`prisma migrate dev` requires a shadow database (created automatically with standard Postgres). `prisma db push` skips migration files — useful for prototyping, not for production.
+
+### Querying from Server Components
+
+No API layer needed — import the client and query directly:
+
+```tsx
+import prisma from "@/lib/prisma";
+
+export default async function TeasPage() {
+  const teas = await prisma.tea.findMany();
+  return <ul>{teas.map(t => <li key={t.id}>{t.name}</li>)}</ul>;
+}
+```
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.

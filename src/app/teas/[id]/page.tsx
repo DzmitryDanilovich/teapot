@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import teas from "@/lib/teas";
+import prisma from "@/lib/prisma";
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -7,7 +7,9 @@ interface Props {
 
 const Tea = async ({ params }: Props) => {
     const { id } = await params;
-    const tea = teas.find((t) => t.id === id);
+    const tea = await prisma.tea.findUnique({
+        where: { id },
+    });
 
     if (!tea) {
         notFound();

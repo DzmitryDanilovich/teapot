@@ -1,8 +1,10 @@
 import Link from "next/link";
-import teas from "@/lib/teas";
+import prisma from "@/lib/prisma";
 
-const Teas = () => (
-    <>
+const Teas = async () => {
+    const teas = await prisma.tea.findMany();
+    
+    return (<>
         <h1>Teas Page</h1>
         <ul>
             {teas.map((tea) => (
@@ -14,6 +16,8 @@ const Teas = () => (
             ))}
         </ul>
     </>
-);
+    );
+
+};
 
 export default Teas;
