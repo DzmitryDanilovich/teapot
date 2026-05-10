@@ -177,14 +177,36 @@ tea.name; // safe, no ! needed
 
 Always use `<Link>` for internal navigation.
 
-In Next.js 16, the server generates a full HTML response for **all** navigations — initial and subsequent. The difference between `<Link>` and `<a>` is not the network response format, it's what happens in the browser when that response arrives:
+### What actually happens on navigation
+
+- **Initial navigation** (direct URL, refresh): server sends full HTML + RSC payload embedded in `<script>` tags.
+- **Subsequent navigation via `<Link>`** (in production, on static routes): server sends only the RSC payload — not full HTML. The browser never reloads; Next.js patches only the changed segment.
+- **Subsequent navigation via `<Link>`** (in dev mode, or dynamic routes without `loading.tsx`): server returns full HTML, same as initial load. Client-side transition optimizations don't apply here.
+
+So whether you see a full HTML response or an RSC payload on link click depends on: production vs dev, and static vs dynamic route.
+
+### Prefetching
+
+Automatic prefetching **only runs in production**. In dev mode there is no prefetching regardless of route type.
+
+For dynamic routes (`/teas/[id]`), prefetching is skipped unless you add a `loading.tsx` file — which enables partial prefetching (layout + loading skeleton).
+
+| Route type | Prefetched | Server roundtrip on click |
+|---|---|---|
+| Static | Yes, full route | No |
+| Dynamic + `loading.tsx` | Yes, partial (layout + skeleton) | Yes, streamed |
+| Dynamic, no `loading.tsx` | No | Yes, full response |
+
+### `<a>` vs `<Link>` difference
+
+Even when the network response is full HTML (dev mode, dynamic route), `<Link>` still differs from `<a>`:
 
 | | `<a>` | `<Link>` |
 |---|---|---|
 | Browser behavior | Full navigation — unloads document, re-executes all scripts, resets scroll | JavaScript intercepts click, no browser navigation event |
 | Shared layouts | Destroyed and rebuilt | Stay in DOM, untouched |
 | JS state | Lost | Preserved |
-| Prefetching | None | Automatic (on viewport entry in dev; on hover or viewport in prod) |
+| Prefetching | None | Automatic in production |
 
 ```tsx
 import Link from "next/link";
