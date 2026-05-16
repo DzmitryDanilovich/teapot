@@ -402,6 +402,95 @@ Use `z.infer<typeof schema>` for form-related types — not the Prisma model, wh
 
 ---
 
+## Authentication — Better Auth + Next.js 16
+
+### Setup
+
+```ts
+// src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
+
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
+  emailAndPassword: { enabled: true },
+  socialProviders: {
+    google: {
+      clientId: process.env["GOOGLE_CLIENT_ID"]!,
+      clientSecret: process.env["GOOGLE_CLIENT_SECRET"]!,
+    },
+  },
+  plugins: [nextCookies()],
+});
+```
+
+### Accessing the session
+
+**In a Server Component:**
+```ts
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+const session = await auth.api.getSession({ headers: await headers() });
+```
+
+**In Proxy (`src/proxy.ts`):**
+```ts
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+// In Next.js 16+, headers() works in proxy and full session validation is recommended
+const session = await auth.api.getSession({ headers: await headers() });
+```
+
+Better Auth docs: for Next.js 16+ proxy, full session validation via `auth.api.getSession` is correct. Cookie-only checks (`getSessionCookie`) are an optimistic alternative but are explicitly marked as insecure — use them only as a quick redirect hint, never as the sole auth gate.
+
+### Protecting routes with Proxy
+
+```ts
+// src/proxy.ts
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+export const proxy = async (request: NextRequest) => {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return NextResponse.redirect(new URL("/login", request.url));
+  return NextResponse.next();
+};
+
+export const config = {
+  matcher: ["/log"],
+};
+```
+
+Proxy runs before any component renders — the protected page never executes if the user is not authenticated. This is better than checking auth inside `page.tsx`, where the render pipeline has already started.
+
+### Multiple proxy rules
+
+Only one `proxy.ts` is supported. Split logic into modules and import:
+
+```ts
+// src/proxy.ts
+export function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/log")) return authProxy(request);
+  if (request.nextUrl.pathname.startsWith("/admin")) return adminProxy(request);
+}
+
+export const config = { matcher: ["/log/:path*", "/admin/:path*"] };
+```
+
+### Session in layout (sign in/out UI)
+
+```tsx
+// src/app/layout.tsx — Server Component
+const session = await auth.api.getSession({ headers: await headers() });
+// render sign-in link or sign-out button based on !!session
+```
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
