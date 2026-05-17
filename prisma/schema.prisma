@@ -14,6 +14,8 @@ datasource db {
 
 model Tea {
   id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   type      String
   origin    String?
@@ -31,6 +33,8 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+
+  teas          Tea[]
 
   @@unique([email])
   @@map("user")
