@@ -380,6 +380,40 @@ const getString = (fd: FormData, key: string): string | undefined => {
 - `typeof val === 'string'` excludes `File` and `null`
 - `val.length > 0` converts empty strings to `undefined` — so optional inputs aren't saved as `""`
 
+### Calling a Server Action — which API to use
+
+| Need | Approach |
+|---|---|
+| No feedback needed | `await action()` directly in async handler |
+| Loading state only | `useTransition` → `startTransition(() => action())` |
+| Loading state + return value | `useActionState(action, initialState)` |
+| No JS needed, simple submit | `<form action={action.bind(null, arg)}>` in Server Component |
+
+`useActionState` is only needed when the action returns something the component needs to render (errors, updated data). If the action always redirects, there is nothing to handle — call it directly.
+
+### Server Action vs Server Component — not the same thing
+
+A **Server Component** runs once during rendering to produce HTML. A **Server Action** is a function exposed as an HTTP endpoint, called later in response to user interactions.
+
+`'use server'` is not "this code runs on the server" — server component code already does. `'use server'` tells the bundler: *expose this as a callable endpoint and give the client an RPC proxy*.
+
+```ts
+// File-level: all exports in this file are server actions
+'use server';
+export const deleteTea = async (id: string) => { ... };
+```
+
+```tsx
+// Function-level: just this one function, inside a .tsx file
+const deleteAction = async () => {
+    'use server';
+    await prisma.tea.delete(...);
+};
+<form action={deleteAction}> ... </form>
+```
+
+Server Components cannot have `onClick`. If you need an event handler, the component must be `'use client'`. The action itself stays in `actions.ts` with `'use server'` — only the button needs to be a client component.
+
 ### Per-field validation errors with zod
 
 ```ts
