@@ -1,16 +1,13 @@
-import { headers } from 'next/headers';
 import Link from 'next/link';
-import { auth } from '@/lib/auth'
 import LogOff from './logOff';
+import { getSession } from '@/lib/session';
 
 const RootLayout = async ({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) => {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    const session = await getSession();
     const isAuthenticated = !!session;
 
     return (

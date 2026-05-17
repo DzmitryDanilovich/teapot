@@ -1,13 +1,11 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+
 
 const Teas = async () => {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    const session = await getSession();
 
     const userId = session?.user.id;
 

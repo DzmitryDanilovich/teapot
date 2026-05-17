@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { logTea } from '../actions';
+import { logTea } from './actions';
 import { Tea } from '@/generated/prisma/browser';
 
 const LogForm = () => {

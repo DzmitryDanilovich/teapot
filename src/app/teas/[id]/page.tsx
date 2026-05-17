@@ -1,16 +1,13 @@
 import { notFound, redirect } from "next/navigation";
-import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 interface Props {
     params: Promise<{ id: string }>;
 }
 
 const Tea = async ({ params }: Props) => {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    const session = await getSession();
 
     const userId = session?.user.id;
 
