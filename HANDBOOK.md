@@ -491,6 +491,101 @@ const session = await auth.api.getSession({ headers: await headers() });
 
 ---
 
+## Scoping data to the authenticated user
+
+Session is available in Server Components, Server Actions, and Proxy the same way — `auth.api.getSession({ headers: await headers() })`. There is no difference between these contexts for session access.
+
+### Pattern: read session, filter data
+
+```tsx
+// Server Component
+const session = await auth.api.getSession({ headers: await headers() });
+if (!session) redirect('/login');
+
+const teas = await prisma.tea.findMany({
+  where: { userId: session.user.id },
+});
+```
+
+### Pattern: attach user to created records
+
+```ts
+// Server Action
+const session = await auth.api.getSession({ headers: await headers() });
+if (!session) return { error: 'Not authenticated' };
+
+await prisma.tea.create({
+  data: { ...parsedData.data, userId: session.user.id },
+});
+```
+
+### Ownership check on detail pages
+
+Don't rely on the list filtering alone — always verify ownership on the detail page too:
+
+```ts
+const tea = await prisma.tea.findUnique({ where: { id } });
+if (!tea || tea.userId !== session.user.id) notFound();
+```
+
+This prevents users from accessing other users' resources by guessing IDs.
+
+### Prisma relation for user-owned records
+
+```prisma
+model Tea {
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
+
+`onDelete: Cascade` — when a user is deleted, their teas are deleted too. Without this, deleting a user would leave orphaned records and violate the foreign key constraint.
+
+---
+
+## Code organisation in Next.js
+
+### Actions — co-locate by feature
+
+One global `actions.ts` grows into a mess. Split by feature, placed next to the route that owns it:
+
+```
+src/app/log/actions.ts       ← logTea
+src/app/login/actions.ts     ← logIn, signUp, logOffAction
+```
+
+`'use server'` at the top of each file makes all exports server actions.
+
+### Zod schemas — module-level, not inline
+
+Define schemas once at module level, not inside the function body. Defining inside the function recreates the schema object on every call:
+
+```ts
+// ✗ recreated on every request
+export const myAction = async (_, formData) => {
+  const schema = z.object({ ... });
+};
+
+// ✓ defined once
+const schema = z.object({ ... });
+export const myAction = async (_, formData) => { ... };
+```
+
+### Session helper — avoid repetition
+
+```ts
+// src/lib/session.ts
+import { auth } from "./auth";
+import { headers } from "next/headers";
+
+export const getSession = async () =>
+  auth.api.getSession({ headers: await headers() });
+```
+
+Every call site becomes `await getSession()`.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
