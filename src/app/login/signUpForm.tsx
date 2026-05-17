@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { signUp, SignUpValues } from '@/app/actions';
+import { signUp, SignUpValues } from './actions';
 
 const SignUpForm = () => {
     const [state, formAction, isPending] = useActionState(
