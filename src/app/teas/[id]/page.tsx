@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { deleteTea } from "./actions";
+import DeleteButton from "./deleteButton";
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -36,6 +38,7 @@ const Tea = async ({ params }: Props) => {
                 </p>
             )}
             <p>Logged date: {tea.createdAt.toLocaleDateString()}</p>
+            <DeleteButton teaId={tea.id} />
         </>
     )
 };
