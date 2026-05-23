@@ -670,6 +670,42 @@ The page check prevents rendering the form for unauthorised users. The action ch
 
 ---
 
+## Developer tooling
+
+### Prettier
+
+Formatter for consistent code style. Config in `.prettierrc`:
+
+```json
+{
+  "trailingComma": "all",
+  "tabWidth": 4,
+  "singleQuote": true,
+  "plugins": ["prettier-plugin-tailwindcss"]
+}
+```
+
+`prettier-plugin-tailwindcss` automatically sorts Tailwind classes into a canonical order on every format — prevents class order drift across the codebase.
+
+### Husky + lint-staged
+
+Husky manages git hooks. lint-staged runs linters only on staged files (not the whole codebase) — keeps pre-commit checks fast.
+
+Pre-commit hook (`.husky/pre-commit`) calls `pnpm lint-staged`, which runs the `lint-staged` script from `package.json`:
+
+```json
+"lint-staged": {
+  "*.{ts,tsx}": "eslint --cache --fix",
+  "*.{ts,tsx,css,md}": "prettier --write"
+}
+```
+
+ESLint auto-fixes what it can; Prettier formats in place. Both run only on staged files.
+
+The `prepare` lifecycle script (`"prepare": "husky"`) runs automatically after `pnpm install` and sets `core.hooksPath = .husky` in git config — so hooks work for any new contributor who clones the repo. Safe to omit for a solo project since hooks are already in place.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
