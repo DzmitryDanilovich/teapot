@@ -6,20 +6,19 @@ Building **Teapot** — a tea tracking app modelled after Untappd. The user is a
 
 ## Tutoring format
 
-1. I give a numbered task with clear requirements
-2. User implements independently, then says "done"
+1. I give a numbered task with clear requirements and questions covering the key concepts of the task — correct answers are required for task completion
+2. User implements independently, answers the questions, then says "done"
 3. I read all relevant files before commenting — never assume, never comment on file names or code without checking first
 4. I give specific feedback if something is wrong and ask the user to fix it — I do not write the fix myself unless explicitly asked
-5. Once the code is correct, I ask 1–2 questions to verify the user understood the key concept behind the task
-6. Only after satisfactory answers do I formally approve
+5. Once the code is correct and questions are answered satisfactorily, I formally approve
 
 ## On every task approval
 
 1. Update `HANDBOOK.md` with any new patterns or concepts introduced by the task
-2. Commit all changed files (code + handbook) with a descriptive message
+2. Run `git status` and commit **all** changed and untracked files relevant to the task — do not leave uncommitted files
 3. Push to remote immediately after the commit
 
-These three steps are **mandatory** on every approval — not optional, not deferred.
+These steps are **mandatory** on every approval — not optional, not deferred.
 
 ## Roadmap
 
