@@ -25,7 +25,9 @@ These three steps are **mandatory** on every approval — not optional, not defe
 
 ### Completed
 
-- Task 1–3: File conventions, routing, dynamic segments, Server Components, direct DB queries
+- Task 1: Route skeleton, routing conventions, nested layouts, dynamic segments
+- Task 2: Static tea data, teas list and detail pages, `notFound()`, `Link` vs `<a>`
+- Task 3: Server vs Client Components mental model
 - Task 4: Prisma 7 setup with Docker PostgreSQL and PrismaPg adapter
 - Task 5: Better Auth, session helper, route protection via `proxy.ts`
 - Task 6: Server Actions, `useActionState`, Zod validation, log tea form
@@ -36,10 +38,11 @@ These three steps are **mandatory** on every approval — not optional, not defe
 
 ### Up next
 
-- Task 11: Install shadcn/ui, style teas list + detail + log form + nav header
-- Task 12: Style login/signup page
-- Task 13: Vitest setup, unit tests for actions and Client Components
-- Task 14: Playwright setup, E2E tests for core user flows
+- Task 11: Prettier, `prettier-plugin-tailwindcss`, Husky, lint-staged
+- Task 12: Install shadcn/ui, style teas list + detail + log form + nav header
+- Task 13: Style login/signup page
+- Task 14: Vitest setup, unit tests for actions and Client Components
+- Task 15: Playwright setup, E2E tests for core user flows
 
 ### Deferred
 
