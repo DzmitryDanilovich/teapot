@@ -620,6 +620,56 @@ Every call site becomes `await getSession()`.
 
 ---
 
+## Pre-filled forms (edit pages)
+
+Pass the existing record as the initial state of `useActionState`. The form fields use `defaultValue` — not `value` — so they're uncontrolled and don't fight React on re-render.
+
+```tsx
+const [state, formAction, isPending] = useActionState(
+    editTea.bind(null, tea.id),
+    { error: '', values: tea }   // tea pre-fills the form on first render
+);
+
+<input name="name" defaultValue={state.values?.name} />
+```
+
+### Passing extra args to a Server Action via `.bind()`
+
+When an action needs an argument that isn't part of the form (like a record ID), use `.bind()` to pre-fill it. This is the idiomatic approach — not a hidden `<input>`.
+
+```ts
+// action signature: first arg is bound, last arg is FormData
+export const editTea = async (teaId: string, prevState: State, formData: FormData) => { ... };
+
+// in the component:
+const boundAction = editTea.bind(null, tea.id);
+const [state, formAction] = useActionState(boundAction, initialState);
+```
+
+Hidden inputs are worse: the value is in the HTML and can be tampered with by the user before submission. `.bind()` keeps the value in the server-side action closure — the client never controls it.
+
+### Auth-before-DB ordering
+
+Always check auth before hitting the database. An unauthenticated request has no business touching Prisma:
+
+```ts
+// ✓ correct order
+const session = await getSession();
+if (!session?.user.id) redirect('/login');
+const tea = await prisma.tea.findUnique({ where: { id } });
+
+// ✗ wasteful — queries DB even when user isn't logged in
+const tea = await prisma.tea.findUnique({ where: { id } });
+const session = await getSession();
+if (!session?.user.id) redirect('/login');
+```
+
+### Double ownership check (page + action)
+
+The page check prevents rendering the form for unauthorised users. The action check prevents the actual database write. Both are required — the action can be called directly via HTTP POST, bypassing the page entirely.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
