@@ -1,8 +1,8 @@
-import { notFound, redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/session";
-import { deleteTea } from "./actions";
-import DeleteButton from "./deleteButton";
+import { notFound, redirect } from 'next/navigation';
+import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/session';
+import DeleteButton from './deleteButton';
+import EditTeaButton from './editTeaButton';
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -15,7 +15,7 @@ const Tea = async ({ params }: Props) => {
 
     if (!userId) {
         redirect('/login');
-    };
+    }
 
     const { id } = await params;
     const tea = await prisma.tea.findUnique({
@@ -34,13 +34,21 @@ const Tea = async ({ params }: Props) => {
             {tea.origin && <p>Origin: {tea.origin}</p>}
             {tea.storeUrl && (
                 <p>
-                    Store URL: <a href={tea.storeUrl} target="_blank" rel="noopener noreferrer">{tea.storeUrl}</a>
+                    Store URL:{' '}
+                    <a
+                        href={tea.storeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        {tea.storeUrl}
+                    </a>
                 </p>
             )}
             <p>Logged date: {tea.createdAt.toLocaleDateString()}</p>
+            <EditTeaButton teaId={tea.id} />
             <DeleteButton teaId={tea.id} />
         </>
-    )
+    );
 };
 
 export default Tea;

@@ -1,19 +1,16 @@
 'use client';
+import { deleteTea } from './actions';
 
-import { deleteTea } from "./actions";
-
-interface DeleteButtonProps {
+interface Props {
     teaId: string;
 }
 
-const DeleteButton = ({ teaId }: DeleteButtonProps) => {
+const DeleteButton = ({ teaId }: Props) => {
     const handleDelete = async () => {
         await deleteTea(teaId);
     };
 
-    return (
-        <button onClick={handleDelete}>Delete</button>
-    );
+    return <button onClick={handleDelete}>Delete</button>;
 };
 
 export default DeleteButton;

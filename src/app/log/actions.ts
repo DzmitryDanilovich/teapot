@@ -12,11 +12,14 @@ const logTeaSchema = z.object({
     origin: z.string().optional(),
     storeUrl: z.preprocess(
         (value) => (value === '' ? undefined : value),
-        z.url('Store URL must be a valid URL').optional()
+        z.url('Store URL must be a valid URL').optional(),
     ),
 });
 
-export const logTea = async (previousState: { error: string }, formData: FormData) => {
+export const logTea = async (
+    previousState: { error: string },
+    formData: FormData,
+) => {
     const rawData = {
         name: formData.get('name'),
         type: formData.get('type'),
@@ -28,7 +31,9 @@ export const logTea = async (previousState: { error: string }, formData: FormDat
 
     if (!parsedData.success) {
         return {
-            error: parsedData.error.issues.map((issue) => issue.message).join(', '),
+            error: parsedData.error.issues
+                .map((issue) => issue.message)
+                .join(', '),
             values: rawData as Partial<Tea>,
         };
     }
@@ -38,10 +43,7 @@ export const logTea = async (previousState: { error: string }, formData: FormDat
     const userId = session?.user.id;
 
     if (!userId) {
-        return {
-            error: 'User not authenticated',
-            values: rawData as Partial<Tea>,
-        };
+        redirect('/login');
     }
 
     await prisma.tea.create({
