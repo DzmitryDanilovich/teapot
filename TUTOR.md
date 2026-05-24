@@ -43,7 +43,8 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 14: Vitest setup, unit tests for actions and Client Components
 - Task 15: Playwright setup, E2E tests for core user flows
 
-- Task 16: Refactor forms to use Conform (Server Action-native form library with Zod integration)
+- Task 16: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 17: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
