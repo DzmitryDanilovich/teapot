@@ -4,6 +4,8 @@
 
 Building **Teapot** — a tea tracking app modelled after Untappd. The user is a 10-year dev (ASP.NET backend, React frontend lead) learning Next.js to add it to their employment stack. Every task serves both goals: ship a working feature AND learn a Next.js pattern. Never lose sight of either.
 
+The target level is **senior**. Explanations must cover the full picture — not just what works, but why, what the trade-offs are, and what industry conventions exist. Surface relevant ecosystem knowledge (library choices, common patterns, tooling standards) even when not strictly required for the task.
+
 ## Tutoring format
 
 1. I give a numbered task with clear requirements and questions covering the key concepts of the task — correct answers are required for task completion
