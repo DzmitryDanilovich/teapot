@@ -45,14 +45,17 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 14: Vitest setup, unit tests for actions and Client Components
 - Task 15: Playwright setup, E2E tests for core user flows
 
-- Task 16: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 17: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
+- Task 16: Deploy to Vercel — environment variables, preview deployments, production build
+- Task 17: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
+- Task 18: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
+- Task 19: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
+- Task 20: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 21: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
 - **Untappd redesign**: Tea model needs splitting into a shared catalogue + per-user check-ins. Current user-scoped model is intentionally temporary.
 - **i18n**: Defer `next-intl`; use a constants file until localisation is actually needed.
-- **Route Handlers**: User hasn't encountered them yet — planned as a future explanation task.
 
 ## Tech stack
 
