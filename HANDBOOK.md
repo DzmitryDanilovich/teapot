@@ -706,6 +706,47 @@ The `prepare` lifecycle script (`"prepare": "husky"`) runs automatically after `
 
 ---
 
+## shadcn/ui
+
+shadcn/ui is not a traditional npm component library. Running `pnpm dlx shadcn@latest add button` copies the component's source code into `src/components/ui/` — you own it completely and can modify it freely. Nothing is locked behind a package version.
+
+Built on **Radix UI**, which provides headless primitives: behavior-only components (focus trapping, ARIA attributes, keyboard navigation, accessible state) with zero styling. shadcn layers Tailwind classes on top. This is why you get correct accessibility on `Dialog`, `Select`, `DropdownMenu` etc. for free — Radix owns that layer.
+
+### `cn()` utility
+
+Combines `clsx` and `tailwind-merge`. Use it wherever class names need to be conditionally combined or when consumer classes should override defaults without conflicts:
+
+```ts
+import { cn } from '@/lib/utils';
+<div className={cn('base-class', condition && 'conditional-class', className)} />
+```
+
+### `asChild` pattern
+
+Passes the behavior and styling of a shadcn component onto its child element instead of rendering its own DOM node:
+
+```tsx
+// Renders an <a> tag with Button styling — not a <button> wrapping an <a>
+<Button asChild variant='outline'>
+    <Link href='/teas'>View Teas</Link>
+</Button>
+```
+
+### ThemeProvider
+
+Wraps the app in `next-themes` for system/light/dark mode. Goes in the root layout. `suppressHydrationWarning` is required on `<html>` to suppress the mismatch between server-rendered class and client-applied theme class.
+
+### next/font
+
+Load Google Fonts at build time — no runtime stylesheet request, no FOUT. The font variable is injected as a CSS custom property:
+
+```ts
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
+<html className={cn('font-sans', montserrat.variable)}>
+```
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
