@@ -17,8 +17,9 @@ The target level is **senior**. Explanations must cover the full picture — not
 ## On every task approval
 
 1. Update `HANDBOOK.md` with any new patterns or concepts introduced by the task
-2. Run `git status` and commit **all** changed and untracked files relevant to the task — do not leave uncommitted files
-3. Push to remote immediately after the commit
+2. Move the completed task from **Up next** to **Completed** in the roadmap
+3. Run `git status` and commit **all** changed and untracked files relevant to the task — do not leave uncommitted files
+4. Push to remote immediately after the commit
 
 These steps are **mandatory** on every approval — not optional, not deferred.
 
