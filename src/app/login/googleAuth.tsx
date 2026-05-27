@@ -1,6 +1,7 @@
-'use client'
+'use client';
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { Button } from '@/components/ui/button';
 
 const GoogleAuth = () => {
     const [error, setError] = useState<string | null>(null);
@@ -16,22 +17,25 @@ const GoogleAuth = () => {
         });
 
         if (result.error) {
-            setError(result.error.message || 'An error occurred during Google sign-in');
+            setError(
+                result.error.message ||
+                    'An error occurred during Google sign-in',
+            );
         }
 
         setIsPending(false);
-
     };
 
     return (
         <>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <button
-                disabled={isPending}
-                type='button'
-                onClick={handleClick}>
-                    Log In with Google
-            </button>
+            {error && (
+                <p role='alert' className='text-destructive mb-4 text-sm'>
+                    {error}
+                </p>
+            )}
+            <Button disabled={isPending} type='button' onClick={handleClick}>
+                Log In with Google
+            </Button>
         </>
     );
 };

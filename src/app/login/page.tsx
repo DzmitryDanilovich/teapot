@@ -4,16 +4,14 @@ import GoogleAuth from './googleAuth';
 
 const logInPage = () => {
     return (
-        <>
-            <h1>Log In</h1>
-            <LogInForm />
-            or
-            <h1>Sign Up</h1>
-            <SignUpForm />
-            or use social log in
+        <div className='flex flex-1 flex-col items-center justify-center gap-8 p-8'>
+            <div className='flex items-center gap-8'>
+                <LogInForm />
+                <SignUpForm />
+            </div>
             <GoogleAuth />
-        </>
-    )
+        </div>
+    );
 };
 
 export default logInPage;

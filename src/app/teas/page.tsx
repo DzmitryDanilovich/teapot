@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
+import TeaList from './teaList';
 
 const Teas = async () => {
     const session = await getSession();
@@ -20,16 +20,10 @@ const Teas = async () => {
 
     return (
         <>
-            <h1>Teas Page</h1>
-            <ul>
-                {teas.map((tea) => (
-                    <li key={tea.id}>
-                        <Link href={`/teas/${tea.id}`}>
-                            {tea.name} ({tea.type}) - {tea.origin}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
+            <div className='flex min-h-screen flex-col items-center justify-center gap-8 p-8'>
+                <h1 className='text-2xl font-bold'>Teas collection</h1>
+                <TeaList teas={teas} />
+            </div>
         </>
     );
 };

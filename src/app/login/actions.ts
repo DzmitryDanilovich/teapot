@@ -3,22 +3,16 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { auth } from '@/lib/auth';
-
-export interface LogInValues {
-    email: string;
-    password: string;
-};
-
-export interface SignUpValues extends LogInValues {
-    name: string;
-};
+import { collectErrors } from '@/common/errorCollector';
 
 const logInSchema = z.object({
     email: z.email('Invalid email address'),
     password: z.string().min(1, 'Password is required'),
 });
 
-export const logIn = async (previousState: { error: string; values: LogInValues }, formData: FormData) => {
+type LogInValues = z.infer<typeof logInSchema>;
+
+export const logIn = async (_previousState: unknown, formData: FormData) => {
     const rawData = {
         email: formData.get('email'),
         password: formData.get('password'),
@@ -28,7 +22,7 @@ export const logIn = async (previousState: { error: string; values: LogInValues 
 
     if (!parsedData.success) {
         return {
-            error: parsedData.error.issues.map((issue) => issue.message).join(', '),
+            errors: collectErrors<LogInValues>(parsedData.error.issues),
             values: rawData as LogInValues,
         };
     }
@@ -42,26 +36,37 @@ export const logIn = async (previousState: { error: string; values: LogInValues 
         });
     } catch (error: unknown) {
         return {
-            error: (error as Error).message || 'An error occurred during login',
+            errors: {
+                form: [
+                    (error as Error).message ||
+                        'An error occurred during login',
+                ],
+            },
             values: rawData as LogInValues,
         };
     }
 
-    redirect('/'); 
+    redirect('/');
 };
 
 const signUpSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.email('Invalid email address'),
-    password: z.string()
+    password: z
+        .string()
         .min(8, 'Password must be at least 8 characters long')
         .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
         .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
         .regex(/\d/, 'Password must contain at least one number')
-        .regex(/[@$!%*?&]/, 'Password must contain at least one special character'),
+        .regex(
+            /[@$!%*?&]/,
+            'Password must contain at least one special character',
+        ),
 });
 
-export const signUp = async (previousState: { error: string; values: SignUpValues }, formData: FormData) => {
+export type SignUpValues = z.infer<typeof signUpSchema>;
+
+export const signUp = async (_previousState: unknown, formData: FormData) => {
     const rawData = {
         name: formData.get('name'),
         email: formData.get('email'),
@@ -72,7 +77,7 @@ export const signUp = async (previousState: { error: string; values: SignUpValue
 
     if (!parsedData.success) {
         return {
-            error: parsedData.error.issues.map((issue) => issue.message).join(', '),
+            errors: collectErrors<SignUpValues>(parsedData.error.issues),
             values: rawData as SignUpValues,
         };
     }
@@ -80,17 +85,22 @@ export const signUp = async (previousState: { error: string; values: SignUpValue
     try {
         await auth.api.signUpEmail({
             body: {
-                name:  parsedData.data.name,
+                name: parsedData.data.name,
                 email: parsedData.data.email,
                 password: parsedData.data.password,
             },
         });
     } catch (error: unknown) {
         return {
-            error: (error as Error).message || 'An error occurred during signup',
+            errors: {
+                form: [
+                    (error as Error).message ||
+                        'An error occurred during signup',
+                ],
+            },
             values: rawData as SignUpValues,
         };
     }
 
-    redirect('/'); 
+    redirect('/');
 };

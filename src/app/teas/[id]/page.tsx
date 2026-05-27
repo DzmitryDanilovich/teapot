@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
-import DeleteButton from './deleteButton';
-import EditTeaButton from './editTeaButton';
+
+import TeaCard from './teaCard';
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -27,27 +27,9 @@ const Tea = async ({ params }: Props) => {
     }
 
     return (
-        <>
-            <h1>Tea Page</h1>
-            <p>Name: {tea.name}</p>
-            <p>Type: {tea.type}</p>
-            {tea.origin && <p>Origin: {tea.origin}</p>}
-            {tea.storeUrl && (
-                <p>
-                    Store URL:{' '}
-                    <a
-                        href={tea.storeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        {tea.storeUrl}
-                    </a>
-                </p>
-            )}
-            <p>Logged date: {tea.createdAt.toLocaleDateString()}</p>
-            <EditTeaButton teaId={tea.id} />
-            <DeleteButton teaId={tea.id} />
-        </>
+        <div className='flex min-h-screen flex-col items-center justify-center gap-8 p-8'>
+            <TeaCard tea={tea} />
+        </div>
     );
 };
 

@@ -2,26 +2,78 @@
 
 import { useActionState } from 'react';
 import { logIn, LogInValues } from './actions';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 
 const LogInForm = () => {
-    const [state, formAction, isPending] = useActionState(
-        logIn,
-        { error: '', values: {} as LogInValues}
-    );
+    const [state, formAction, isPending] = useActionState(logIn, null);
 
     return (
-        <>
-            {state.error && <p style={{ color: 'red' }}>{state.error}</p>}
-            <form action={formAction}>
-                <label htmlFor='email'>Email:</label>
-                <input type='email' id='email' name='email' defaultValue={state.values.email} required />
+        <Card className='w-96'>
+            <CardHeader>
+                <CardTitle>Log In</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {state?.errors.form && (
+                    <p role='alert' className='text-destructive mb-4 text-sm'>
+                        {state.errors.form.join('; ')}
+                    </p>
+                )}
+                <form id='loginForm' action={formAction}>
+                    <FieldGroup>
+                        <Field>
+                            <FieldLabel htmlFor='email'>Email</FieldLabel>
+                            <Input
+                                type='email'
+                                id='email'
+                                name='email'
+                                defaultValue={state?.values.email}
+                                required
+                            />
+                            <FieldError
+                                errors={state?.errors.email?.map((e) => ({
+                                    message: e,
+                                }))}
+                            />
+                        </Field>
 
-            <label htmlFor='password'>Password:</label>
-            <input type='password' id='password' name='password' defaultValue={state.values.password} required />
-
-            <button disabled={isPending} type='submit'>Sign In</button>
-            </form>
-        </>
+                        <Field>
+                            <FieldLabel htmlFor='password'>Password</FieldLabel>
+                            <Input
+                                type='password'
+                                id='password'
+                                name='password'
+                                defaultValue={state?.values.password}
+                                required
+                            />
+                            <FieldError
+                                errors={state?.errors.password?.map((e) => ({
+                                    message: e,
+                                }))}
+                            />
+                        </Field>
+                    </FieldGroup>
+                </form>
+            </CardContent>
+            <CardFooter>
+                <Button disabled={isPending} type='submit' form='loginForm'>
+                    Log In
+                </Button>
+            </CardFooter>
+        </Card>
     );
 };
 

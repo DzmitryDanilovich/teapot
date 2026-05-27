@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Tea } from '@/generated/prisma/browser';
 import { getSession } from '@/lib/session';
 import prisma from '@/lib/prisma';
+import { collectErrors } from '@/common/errorCollector';
 
 const logTeaSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -16,10 +17,9 @@ const logTeaSchema = z.object({
     ),
 });
 
-export const logTea = async (
-    previousState: { error: string },
-    formData: FormData,
-) => {
+type LogTeaValues = z.infer<typeof logTeaSchema>;
+
+export const logTea = async (_previousState: unknown, formData: FormData) => {
     const rawData = {
         name: formData.get('name'),
         type: formData.get('type'),
@@ -31,9 +31,7 @@ export const logTea = async (
 
     if (!parsedData.success) {
         return {
-            error: parsedData.error.issues
-                .map((issue) => issue.message)
-                .join(', '),
+            errors: collectErrors<LogTeaValues>(parsedData.error.issues),
             values: rawData as Partial<Tea>,
         };
     }
