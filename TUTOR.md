@@ -36,11 +36,11 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 8: Tea detail page, conditional rendering, ownership check
 - Task 9: Delete action, Server Action calling patterns (`useActionState` vs `useTransition` vs direct call)
 - Task 10: Edit page, pre-filled form, `.bind()` for extra Server Action args, auth-before-DB ordering
+- Task 11: Prettier, `prettier-plugin-tailwindcss`, Husky, lint-staged
+- Task 12: Install shadcn/ui, style teas list + detail + log form + nav header
 
 ### Up next
 
-- Task 11: Prettier, `prettier-plugin-tailwindcss`, Husky, lint-staged
-- Task 12: Install shadcn/ui, style teas list + detail + log form + nav header ✓
 - Task 13: Style login/signup page
 - Task 14: Vitest setup, unit tests for actions and Client Components
 - Task 15: Playwright setup, E2E tests for core user flows
