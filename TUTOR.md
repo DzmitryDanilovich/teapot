@@ -45,13 +45,14 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 
 - Task 14: Vitest setup, unit tests for actions and Client Components
 - Task 15: Playwright setup, E2E tests for core user flows
+- Task 16: GitHub Actions CI — run build, lint, and test on every push/PR to main
 
-- Task 16: Deploy to Vercel — environment variables, preview deployments, production build
-- Task 17: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
-- Task 18: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
-- Task 19: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
-- Task 20: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 21: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
+- Task 17: Deploy to Vercel — environment variables, preview deployments, production build
+- Task 18: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
+- Task 19: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
+- Task 20: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
+- Task 21: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 22: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
