@@ -16,6 +16,7 @@ const teas: Tea[] = [
         origin: 'China',
         storeUrl: null,
         createdAt: new Date(),
+        userId: 'cd49bde0-085e-44c5-8674-06e2815a4734'
     },
     {
         id: 'e87613b1-249f-450c-9481-9b58ea5d04e1',
@@ -24,6 +25,7 @@ const teas: Tea[] = [
         origin: 'India',
         storeUrl: null,
         createdAt: new Date(),
+        userId: 'cd49bde0-085e-44c5-8674-06e2815a4734'
     },
     {
         id: '750aa0e9-3b86-4ad8-9048-ab223d831e4d',
@@ -32,6 +34,7 @@ const teas: Tea[] = [
         origin: 'Taiwan',
         storeUrl: null,
         createdAt: new Date(),
+        userId: 'cd49bde0-085e-44c5-8674-06e2815a4734'
     },
 ];
 

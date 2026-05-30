@@ -745,6 +745,23 @@ const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });
 <html className={cn('font-sans', montserrat.variable)}>
 ```
 
+### Tabs — state lives in Radix
+
+shadcn `Tabs` (built on Radix Tabs primitive) manages the active-tab state internally. You give it `defaultValue` for uncontrolled mode; no `useState` in your own component needed. Each `TabsTrigger`/`TabsContent` pair is linked by a matching `value`.
+
+```tsx
+<Tabs defaultValue='login'>
+    <TabsList>
+        <TabsTrigger value='login'>Log In</TabsTrigger>
+        <TabsTrigger value='signup'>Sign Up</TabsTrigger>
+    </TabsList>
+    <TabsContent value='login'><LogInForm /></TabsContent>
+    <TabsContent value='signup'><SignUpForm /></TabsContent>
+</Tabs>
+```
+
+For controlled mode (syncing the active tab to URL or external state), use `value` + `onValueChange` instead of `defaultValue`.
+
 ---
 
 ## Key trade-offs to keep in mind

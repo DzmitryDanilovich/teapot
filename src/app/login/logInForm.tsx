@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { logIn, LogInValues } from './actions';
+import { logIn } from './actions';
 import { Button } from '@/components/ui/button';
 import {
     Card,

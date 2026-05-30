@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { Tea } from '@/generated/prisma/browser';
 import {
