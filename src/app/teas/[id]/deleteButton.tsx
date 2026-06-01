@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+
 import { deleteTea } from './actions';
 
 interface Props {
@@ -8,8 +9,8 @@ interface Props {
 }
 
 const DeleteButton = ({ teaId }: Props) => {
-    const handleDelete = async () => {
-        await deleteTea(teaId);
+    const handleDelete = () => {
+        void deleteTea(teaId);
     };
 
     return (

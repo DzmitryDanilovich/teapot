@@ -1,8 +1,9 @@
 'use client';
 
-import type { Tea } from '@/generated/prisma/browser';
-import { editTea } from './actions';
 import TeaEditCard from '@/components/teaEditCard';
+import type { Tea } from '@/generated/prisma/browser';
+
+import { editTea } from './actions';
 
 interface Props {
     tea: Tea;

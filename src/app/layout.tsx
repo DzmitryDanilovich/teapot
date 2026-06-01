@@ -1,8 +1,11 @@
-import { Montserrat } from 'next/font/google';
 import './globals.css';
+
+import { Montserrat } from 'next/font/google';
+
+import { ThemeProvider } from '@/components/theme-provider';
 import { getSession } from '@/lib/session';
 import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/components/theme-provider';
+
 import NavigationMenuComponent from './navigationMenu';
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-sans' });

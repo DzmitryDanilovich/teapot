@@ -1,9 +1,10 @@
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
 
 const Home = () => {
     return (
-        <div className='flex min-h-screen flex-col items-center justify-center gap-8 p-8'>
+        <div className='flex flex-1 flex-col items-center justify-center gap-8 p-8'>
             <Button asChild className='max-w-sm min-w-sm'>
                 <Link href='/teas'>Go to Teas</Link>
             </Button>

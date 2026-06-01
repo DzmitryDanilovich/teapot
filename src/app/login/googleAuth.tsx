@@ -1,7 +1,9 @@
 'use client';
+
 import { useState } from 'react';
-import { authClient } from '@/lib/auth-client';
+
 import { Button } from '@/components/ui/button';
+import { authClient } from '@/lib/auth-client';
 
 const GoogleAuth = () => {
     const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,11 @@ const GoogleAuth = () => {
                     {error}
                 </p>
             )}
-            <Button disabled={isPending} type='button' onClick={handleClick}>
+            <Button
+                disabled={isPending}
+                type='button'
+                onClick={() => void handleClick()}
+            >
                 Log In with Google
             </Button>
         </>

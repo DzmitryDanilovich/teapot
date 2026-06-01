@@ -40,10 +40,10 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 11: Prettier, `prettier-plugin-tailwindcss`, Husky, lint-staged
 - Task 12: Install shadcn/ui, style teas list + detail + log form + nav header
 - Task 13: Style login/signup page with Tabs toggle
+- Task 14: Vitest setup, unit tests for utilities, actions, and Client Components
 
 ### Up next
 
-- Task 14: Vitest setup, unit tests for actions and Client Components
 - Task 15: Playwright setup, E2E tests for core user flows
 - Task 16: GitHub Actions CI — run build, lint, and test on every push/PR to main
 

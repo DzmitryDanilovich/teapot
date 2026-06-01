@@ -1,6 +1,8 @@
-import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+
+import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+
 import TeaList from './teaList';
 
 const Teas = async () => {
@@ -20,7 +22,7 @@ const Teas = async () => {
 
     return (
         <>
-            <div className='flex min-h-screen flex-col items-center justify-center gap-8 p-8'>
+            <div className='flex flex-1 flex-col items-center justify-center gap-8 p-8'>
                 <h1 className='text-2xl font-bold'>Teas collection</h1>
                 <TeaList teas={teas} />
             </div>

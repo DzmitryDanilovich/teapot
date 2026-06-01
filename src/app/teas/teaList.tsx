@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Tea } from '@/generated/prisma/browser';
+
+import { Button } from '@/components/ui/button';
 import {
     Item,
     ItemActions,
@@ -7,7 +8,7 @@ import {
     ItemDescription,
     ItemTitle,
 } from '@/components/ui/item';
-import { Button } from '@/components/ui/button';
+import { Tea } from '@/generated/prisma/browser';
 
 interface Props {
     teas: Tea[];

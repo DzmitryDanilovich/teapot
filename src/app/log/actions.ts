@@ -2,14 +2,15 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { Tea } from '@/generated/prisma/browser';
-import { getSession } from '@/lib/session';
-import prisma from '@/lib/prisma';
+
 import { collectErrors } from '@/common/errorCollector';
+import { Tea, TeaType } from '@/generated/prisma/browser';
+import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/session';
 
 const logTeaSchema = z.object({
     name: z.string().min(1, 'Name is required'),
-    type: z.string().min(1, 'Type is required'),
+    type: z.enum(TeaType, 'Valid type is required'),
     origin: z.string().optional(),
     storeUrl: z.preprocess(
         (value) => (value === '' ? undefined : value),

@@ -1,14 +1,9 @@
 'use client';
 
+import { useActionState, useState } from 'react';
+
+import type { Errors } from '@/common/errorCollector';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-    Combobox,
-    ComboboxContent,
-    ComboboxInput,
-    ComboboxItem,
-} from '@/components/ui/combobox';
-import teaTypes from '@/common/teaTypes';
 import {
     Card,
     CardContent,
@@ -16,10 +11,15 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxInput,
+    ComboboxItem,
+} from '@/components/ui/combobox';
 import { Field, FieldError, FieldGroup } from '@/components/ui/field';
-import type { Errors } from '@/common/errorCollector';
-import { Tea } from '@/generated/prisma/browser';
-import { useActionState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Tea, TeaType } from '@/generated/prisma/browser';
 
 interface State {
     values: Partial<Tea>;
@@ -34,6 +34,9 @@ interface Props {
 
 const TeaEditCard = ({ title, initialState, action }: Props) => {
     const [state, formAction, isPending] = useActionState(action, initialState);
+    const [type, setType] = useState<TeaType | null>(
+        state?.values.type || null,
+    );
 
     return (
         <Card className='w-96'>
@@ -64,13 +67,14 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                         <Field>
                             <Combobox
                                 name='type'
-                                items={teaTypes}
-                                value={state?.values?.type}
+                                items={Object.values(TeaType)}
+                                value={type}
+                                onValueChange={setType}
                                 required
                             >
                                 <ComboboxInput placeholder='Tea Type' />
                                 <ComboboxContent>
-                                    {teaTypes.map((tea) => (
+                                    {Object.values(TeaType).map((tea) => (
                                         <ComboboxItem key={tea} value={tea}>
                                             {tea}
                                         </ComboboxItem>

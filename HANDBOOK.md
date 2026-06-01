@@ -764,6 +764,40 @@ For controlled mode (syncing the active tab to URL or external state), use `valu
 
 ---
 
+## Testing — Vitest + React Testing Library
+
+### Why `jsdom`
+
+Vitest runs on Node, which has no DOM — no `document`, `window`, or element APIs. `jsdom` (set via `test.environment: 'jsdom'`) provides a simulated browser DOM so React components can render and be queried in tests. `happy-dom` is a lighter, faster alternative with slightly less complete API coverage.
+
+### Path aliases — native resolution
+
+Vitest resolves the `@/` alias from `tsconfig.json` natively via `resolve.tsconfigPaths: true` — no `vite-tsconfig-paths` plugin needed in current versions. The plugin is the older approach; prefer the built-in option.
+
+### What can and can't be tested
+
+- **Pure functions** (e.g. `collectErrors`) — trivial, no environment needed.
+- **Client Components** — render with RTL, mock Server Actions with `vi.mock`, drive interactions with `@testing-library/user-event`.
+- **Async Server Components** — cannot be unit tested with Vitest yet. Cover their behavior with Playwright E2E instead.
+
+### Mocking a Server Action
+
+```ts
+vi.mock('./actions', () => ({ logIn: vi.fn() }));
+const mockLogIn = vi.mocked(logIn);
+
+// drive the form, then assert the action was called with the right FormData
+expect(mockLogIn).toHaveBeenCalledWith(null, expectedFormData);
+```
+
+`clearMocks` + `restoreMocks` in the config reset mock state between tests automatically.
+
+### Query by accessible role/label
+
+RTL encourages querying the way a user perceives the UI: `getByRole('button', { name: 'Log In' })`, `getByLabelText('Email')`. This is why the accessible `htmlFor`/`id` pairing on form fields matters — it makes the component both accessible and testable.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.

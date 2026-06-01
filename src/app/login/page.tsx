@@ -1,7 +1,8 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import GoogleAuth from './googleAuth';
 import LogInForm from './logInForm';
 import SignUpForm from './signUpForm';
-import GoogleAuth from './googleAuth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const logInPage = () => {
     return (

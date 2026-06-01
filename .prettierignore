@@ -3,3 +3,6 @@
 
 # Except src:
 !/src
+!eslint.config.mjs
+!vitest.config.ts
+!/test

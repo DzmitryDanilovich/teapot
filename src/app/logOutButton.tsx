@@ -1,8 +1,10 @@
 'use client';
 
 import { useActionState } from 'react';
-import { logOffAction } from './actions';
+
 import { Button } from '@/components/ui/button';
+
+import { logOffAction } from './actions';
 
 const LogOutButton = () => {
     const [state, action, isPending] = useActionState(logOffAction, {

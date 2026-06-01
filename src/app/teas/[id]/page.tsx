@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 
@@ -27,7 +28,7 @@ const Tea = async ({ params }: Props) => {
     }
 
     return (
-        <div className='flex min-h-screen flex-col items-center justify-center gap-8 p-8'>
+        <div className='flex flex-1 flex-col items-center justify-center gap-8 p-8'>
             <TeaCard tea={tea} />
         </div>
     );

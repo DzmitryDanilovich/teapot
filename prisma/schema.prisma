@@ -12,12 +12,20 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TeaType {
+  green @map("green")
+  black @map("black")
+  oolong @map("oolong")
+  white @map("white")
+  puerh @map("pu-erh")
+}
+
 model Tea {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
-  type      String
+  type      TeaType?
   origin    String?
   storeUrl  String?
   createdAt DateTime @default(now())

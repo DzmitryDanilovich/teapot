@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { signUp } from './actions';
+
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -16,6 +16,8 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+
+import { signUp } from './actions';
 
 const SignUpForm = () => {
     const [state, formAction, isPending] = useActionState(signUp, null);

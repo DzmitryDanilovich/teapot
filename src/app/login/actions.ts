@@ -2,8 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { auth } from '@/lib/auth';
+
 import { collectErrors } from '@/common/errorCollector';
+import { auth } from '@/lib/auth';
 
 const logInSchema = z.object({
     email: z.email('Invalid email address'),
