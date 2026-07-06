@@ -51,8 +51,16 @@ const eslintConfig = defineConfig([
             '@typescript-eslint/unbound-method': 'off',
         },
     },
+    {
+        files: ['./e2e/**'],
+        rules: {
+            'react-hooks/rules-of-hooks': 'off',
+        },
+    },
     globalIgnores([
         '.next/**',
+        '.next-e2e/**',
+        'playwright-report/**',
         'out/**',
         'build/**',
         'next-env.d.ts',

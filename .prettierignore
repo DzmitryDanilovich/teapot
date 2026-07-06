@@ -6,3 +6,4 @@
 !eslint.config.mjs
 !vitest.config.ts
 !/test
+!/e2e

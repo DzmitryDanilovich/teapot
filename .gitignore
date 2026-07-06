@@ -44,3 +44,13 @@ next-env.d.ts
 /src/generated/prisma
 
 .eslintcache
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/e2e/.auth/
+.next-e2e/

@@ -798,6 +798,69 @@ RTL encourages querying the way a user perceives the UI: `getByRole('button', { 
 
 ---
 
+## E2E testing — Playwright
+
+E2E tests live in a top-level `e2e/` directory, not co-located: they cross pages/actions/DB in one flow (no single "right" neighbour), use a different runner, and can't import app internals anyway. Naming convention: `*.spec.ts` for Playwright vs `*.test.ts(x)` for Vitest keeps the runners apart.
+
+### Test data isolation
+
+A dedicated throwaway database, wiped on every run:
+
+- Separate Docker Postgres on port **5433** (`teapot-test-db`), dev DB on 5432 stays untouched
+- `.env.e2e` (gitignored) points `DATABASE_URL` at 5433; loaded in `playwright.config.ts` with `override: true`
+- `globalSetup` runs `prisma migrate reset --force` — but first **guards** that `DATABASE_URL` ends with `5433/teapot`, so it can never nuke the wrong DB
+- Separate build dir (`distDir: process.env.NEXT_DIST_DIR`) so the e2e production build doesn't clobber the dev `.next` cache
+- Per-test dedicated seed records (`SEED_TEA` read-only, `EDITABLE_TEA`, `DELETABLE_TEA`) so `fullyParallel` tests don't race each other
+
+### Auth via storageState
+
+Better Auth's session cookie is HTTP-only — client JS can't read it, but Playwright's `storageState` captures the whole browser cookie jar:
+
+```ts
+// auth.setup.ts — runs once as a dependency project
+await request.post('/api/auth/sign-up/email', { data: SEED_USER });
+await request.storageState({ path: 'e2e/.auth/user.json' });  // gitignored!
+```
+
+```ts
+// playwright.config.ts — every test in this project starts logged in
+projects: [
+    { name: 'auth seed', testMatch: 'auth.setup.ts' },
+    { name: 'chromium', use: { storageState: seedUserStorageStatePath },
+      dependencies: ['auth seed'] },
+]
+```
+
+Project `dependencies` chain setup before tests (auth seed → data seed → tests). Tests that need a logged-out state override per-file: `test.use({ storageState: { cookies: [], origins: [] } })`.
+
+### Page Object Model + fixtures
+
+Page objects encapsulate selectors/interactions per page (`e2e/pages/*.page.ts`); custom fixtures inject them into tests via `base.extend`:
+
+```ts
+const test = base.extend<{ teaListPage: TeaListPage }>({
+    teaListPage: async ({ page }, use) => { await use(new TeaListPage(page)); },
+});
+```
+
+Tests then read as user flows: `await teaListPage.openTeaListItemByName(...)`. Note: ESLint mistakes Playwright's `use` for React's hook — disable `react-hooks/rules-of-hooks` for `e2e/**` in the config, not inline.
+
+### webServer
+
+Playwright starts the app itself — a production build, not dev mode:
+
+```ts
+webServer: {
+    command: `pnpm build && pnpm start --port ${port}`,
+    url: `http://localhost:${port}`,
+    reuseExistingServer: false,
+}
+```
+
+E2E against the prod build catches build-only issues and matches what ships. This is also where async Server Components get their test coverage — Vitest can't unit test them.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.

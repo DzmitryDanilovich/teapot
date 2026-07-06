@@ -41,10 +41,10 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 12: Install shadcn/ui, style teas list + detail + log form + nav header
 - Task 13: Style login/signup page with Tabs toggle
 - Task 14: Vitest setup, unit tests for utilities, actions, and Client Components
+- Task 15: Playwright setup — isolated test DB, storageState auth, Page Object Model, E2E tests for core user flows
 
 ### Up next
 
-- Task 15: Playwright setup, E2E tests for core user flows
 - Task 16: GitHub Actions CI — run build, lint, and test on every push/PR to main
 
 - Task 17: Deploy to Vercel — environment variables, preview deployments, production build

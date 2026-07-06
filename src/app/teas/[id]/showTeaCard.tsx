@@ -26,30 +26,32 @@ const ShowTeaCard = ({ tea, onEdit }: Props) => {
                 <CardTitle>{tea.name}</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className='grid grid-cols-2 gap-4'>
-                    <p>Type:</p> <p>{tea.type}</p>
+                <dl className='grid grid-cols-2 gap-4'>
+                    <dt>Type:</dt> <dd data-testid='tea-type'>{tea.type}</dd>
                     {tea.origin && (
                         <>
-                            <p>Origin:</p>
-                            <p>{tea.origin}</p>
+                            <dt>Origin:</dt>
+                            <dd data-testid='tea-origin'>{tea.origin}</dd>
                         </>
                     )}
                     {tea.storeUrl && (
                         <>
-                            <p>Store URL:</p>
-                            <a
-                                className='text-gray-400 hover:underline'
-                                href={tea.storeUrl}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                            >
-                                {tea.storeUrl}
-                            </a>
+                            <dt>Store URL:</dt>
+                            <dd data-testid='tea-store-url'>
+                                <a
+                                    className='text-gray-400 hover:underline'
+                                    href={tea.storeUrl}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                >
+                                    {tea.storeUrl}
+                                </a>
+                            </dd>
                         </>
                     )}
-                    <p>Logged date:</p>{' '}
-                    <p>{format(new Date(tea.createdAt), 'dd.MM.yyyy')}</p>
-                </div>
+                    <dt>Logged date:</dt>
+                    <dd>{format(new Date(tea.createdAt), 'dd.MM.yyyy')}</dd>
+                </dl>
             </CardContent>
             <CardFooter className='flex justify-end gap-2'>
                 <Button variant='outline' onClick={onEdit}>
