@@ -1,0 +1,82 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run ESLint
+        run: pnpm lint
+
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: 'actions/checkout@v7'
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run TypeScript type checking
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: 'actions/checkout@v7'
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run tests
+        run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [lint, check-types, test]
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: teapot-test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: 'actions/checkout@v7'
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Setup .env file
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/teapot-test" >> .env
+          echo "NEXT_DIST_DIR='.next-e2e'" >> .env
+        shell: bash
+      - name: Build
+        run: pnpm build
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Run end-to-end tests
+        run: pnpm e2e
+      - name: Upload Playwright Test Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 5

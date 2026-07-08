@@ -42,10 +42,9 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 13: Style login/signup page with Tabs toggle
 - Task 14: Vitest setup, unit tests for utilities, actions, and Client Components
 - Task 15: Playwright setup — isolated test DB, storageState auth, Page Object Model, E2E tests for core user flows
+- Task 16: GitHub Actions CI — parallel lint/typecheck/test gates, e2e with Postgres service container, composite setup action, caching
 
 ### Up next
-
-- Task 16: GitHub Actions CI — run build, lint, and test on every push/PR to main
 
 - Task 17: Deploy to Vercel — environment variables, preview deployments, production build
 - Task 18: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions

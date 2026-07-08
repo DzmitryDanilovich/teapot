@@ -861,6 +861,62 @@ E2E against the prod build catches build-only issues and matches what ships. Thi
 
 ---
 
+## CI — GitHub Actions
+
+Workflow in `.github/workflows/ci.yml`, triggered on `push` **and** `pull_request` to `main` — PR validation before merge is the point of CI gating.
+
+### Job structure — parallel gates, gated e2e
+
+Cheap checks (`lint`, `check-types`, `test`) run as parallel jobs. The expensive e2e job declares `needs: [lint, check-types, test]` so it only starts once the fast gates are green. Trade-off: parallel-everything = fastest green run; `needs` on the expensive job = cheapest red run.
+
+### Composite action for shared setup
+
+Four jobs all need env + pnpm + Node + install. Extract into `.github/actions/setup/action.yml` (`runs: using: 'composite'`) and each job does `uses: ./.github/actions/setup`. DRY for workflows.
+
+### Toolchain pinning
+
+- `.nvmrc` — Node version, consumed by `setup-node` via `node-version-file`
+- `packageManager` field in `package.json` — pnpm version, consumed by `pnpm/action-setup`
+- `pnpm install --frozen-lockfile` — install exactly what the lockfile says, fail otherwise
+- `postinstall: prisma generate` — the generated client is gitignored, so CI must regenerate it
+
+### Postgres via service container
+
+```yaml
+services:
+  postgres:
+    image: postgres:18
+    env: { POSTGRES_USER: ..., POSTGRES_DB: teapot-test }
+    ports: ['5432:5432']
+    options: >-
+      --health-cmd pg_isready --health-interval 10s ...
+```
+
+GitHub runs the container alongside the job; `ports:` maps it to the runner host, so the app reaches it at `localhost:5432`. Health options make the job wait until Postgres actually accepts connections.
+
+### Secrets vs plain env
+
+Nothing in this pipeline needs `secrets.`: the DB is a throwaway container, `BETTER_AUTH_SECRET` is a dummy for an ephemeral instance, Google creds are fakes because no test exercises OAuth. Secrets are for credentials to *external* services — the day e2e does real Google OAuth, those move to `secrets.`.
+
+### Caching
+
+- pnpm store: `setup-node` with `cache: 'pnpm'`
+- Playwright browsers: `actions/cache` on `~/.cache/ms-playwright`, keyed `playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}`
+
+### CI-aware Playwright config
+
+```ts
+retries: process.env.CI ? 2 : 0,
+reporter: [[process.env.CI ? 'github' : 'list'], ['html']],
+trace: process.env.CI ? 'on-first-retry' : 'on',
+// CI builds in a separate step; webServer only starts:
+command: `${process.env.CI ? '' : 'pnpm build && '}pnpm start --port ${port}`,
+```
+
+`github` reporter annotates failures inline on the PR. Upload `playwright-report/` as an artifact with `if: ${{ !cancelled() }}` so it survives failures.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
