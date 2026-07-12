@@ -47,11 +47,12 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 ### Up next
 
 - Task 17: Deploy to Vercel — environment variables, preview deployments, production build
-- Task 18: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
-- Task 19: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
-- Task 20: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
-- Task 21: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 22: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
+- Task 18: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
+- Task 19: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
+- Task 20: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
+- Task 21: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
+- Task 22: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 23: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
