@@ -2,6 +2,10 @@ name: Setup
 description: Setup environment, Node.js, pnpm, and dependencies
 
 inputs:
+  ignore-env:
+    description: Whether to ignore setting up the .env file
+    required: false
+    default: 'false'
   port:
     description: Port number for the application
     required: false
@@ -11,6 +15,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup .env file
+      if: ${{ inputs.ignore-env != 'true' }}
       run: |
         echo "CI=true" >> .env
         echo "BETTER_AUTH_SECRET=dummy_secret_that_has_32_symbols" >> .env

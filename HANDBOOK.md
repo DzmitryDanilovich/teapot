@@ -917,6 +917,83 @@ command: `${process.env.CI ? '' : 'pnpm build && '}pnpm start --port ${port}`,
 
 ---
 
+## Deployment — Vercel via CI
+
+### Taking deploys away from Vercel's Git integration
+
+By default Vercel deploys on every push, *ungated* — it doesn't know or care whether your tests pass. To make deploys conditional on CI, disable the Git integration and deploy from the workflow instead:
+
+```json
+// vercel.json
+{ "git": { "deploymentEnabled": false } }
+```
+
+Then the `deploy` job declares `needs: [e2e]`, so nothing reaches production unless lint, typecheck, unit tests, and e2e are all green.
+
+### `vercel build` + `--prebuilt`
+
+```bash
+vercel build --target=preview|production    # build in CI, output to .vercel/output
+vercel deploy --prebuilt                    # upload the built output, don't rebuild
+```
+
+Building in CI means the deploy step uploads artifacts rather than running a build on Vercel — you control the toolchain and the build is already verified.
+
+### `migrate dev` vs `migrate deploy`
+
+| | `migrate dev` | `migrate deploy` |
+|---|---|---|
+| Generates new migration files from schema diff | Yes | **No** |
+| Applies pending migrations | Yes | Yes |
+| Needs a shadow database | Yes | No |
+| Can reset/drop the database on drift | **Yes** | Never |
+| Interactive prompts | Yes | No |
+
+Only `migrate deploy` may ever touch production: it applies committed migration files and nothing else. `migrate dev` is a development authoring tool — on detecting drift it will offer to reset the database, which against production means data loss.
+
+### Per-PR database branching
+
+A preview deployment pointed at the production database would let PR code mutate real data. Neon branches solve this — a copy-on-write branch per PR:
+
+```yaml
+- uses: neondatabase/create-branch-action@v6
+  with:
+    branch_name: preview/pr-${{ github.event.pull_request.number }}
+    prisma: true
+```
+
+Run `prisma migrate deploy` against the branch, pass its URL to the deployment as `DATABASE_URL`, and delete the branch on PR close via a `pull_request: [closed]` workflow. Preview code then exercises real migrations against realistic data with zero risk to production.
+
+### Pooled vs direct connection strings
+
+Neon exposes two URLs, and they are **not** interchangeable:
+
+- **Pooled** (`...-pooler...`) — PgBouncer in transaction mode. Use for the *application*.
+- **Direct** — a real Postgres session. Use for *migrations*.
+
+Migrations must use the direct URL because Prisma Migrate takes a session-level advisory lock, and PgBouncer's transaction mode multiplexes clients across backends so session state can't be relied on.
+
+### Why `pg.Pool` is a serverless concern
+
+A connection pool assumes **one long-lived process** serving many requests: it opens N connections once and reuses them for the process's lifetime. Serverless breaks that assumption — each function instance is its own process with its own module scope, so *each instance constructs its own `pg.Pool`*. Fifty concurrent instances means fifty independent pools, not one shared pool of fifty.
+
+Note the singleton in `src/lib/prisma.ts` only guards `NODE_ENV !== 'production'` — it exists to survive dev HMR, and deliberately does nothing in production, where every cold start builds a fresh client and pool.
+
+This is what a pooler fixes: the app's many short-lived pools all connect to PgBouncer, which multiplexes them onto a small number of real Postgres backends. Neon's "up to 10,000 connections" figure describes the *pooled* endpoint; direct Postgres connections are far more limited, because each one is a backend process with real memory cost.
+
+### Better Auth on preview deployments
+
+Preview URLs are unique per deployment, but `baseURL` is static config. Infer it from Vercel's injected env var:
+
+```ts
+baseURL: process.env['BETTER_AUTH_URL']
+    ?? (process.env['VERCEL_URL'] && `https://${process.env['VERCEL_URL']}`),
+```
+
+That fixes email/password auth. **OAuth still breaks**, because Google requires an exact, pre-registered redirect URI and preview URLs are unknowable in advance. Better Auth ships `oAuthProxy()` for exactly this: register the production callback URL once with the provider, and preview deployments proxy their OAuth flow through it.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.

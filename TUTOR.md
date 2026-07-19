@@ -43,16 +43,16 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 14: Vitest setup, unit tests for utilities, actions, and Client Components
 - Task 15: Playwright setup — isolated test DB, storageState auth, Page Object Model, E2E tests for core user flows
 - Task 16: GitHub Actions CI — parallel lint/typecheck/test gates, e2e with Postgres service container, composite setup action, caching
+- Task 17: Deploy to Vercel via CI — `deploymentEnabled: false`, `vercel build --prebuilt`, per-PR Neon branches, `migrate deploy`, preview URL PR comment
 
 ### Up next
-
-- Task 17: Deploy to Vercel — environment variables, preview deployments, production build
-- Task 18: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
-- Task 19: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
-- Task 20: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
-- Task 21: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
-- Task 22: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 23: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
+- Task 18: Deploy → test → promote pipeline — e2e against real preview deployments (per-PR Neon branch as test DB), staged production deploys via `--skip-domain`, non-destructive smoke gate, `vercel promote`, Protection Bypass for Automation; delete the artifact-transfer machinery this replaces
+- Task 19: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
+- Task 20: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
+- Task 21: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
+- Task 22: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
+- Task 23: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 24: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
