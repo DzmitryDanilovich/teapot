@@ -8,6 +8,7 @@ const Home = () => {
             <Button asChild className='max-w-sm min-w-sm'>
                 <Link href='/teas'>Go to Teas</Link>
             </Button>
+            ABOBA
             <Button asChild className='max-w-sm min-w-sm'>
                 <Link href='/log'>Log</Link>
             </Button>
