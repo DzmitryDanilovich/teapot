@@ -992,6 +992,19 @@ baseURL: process.env['BETTER_AUTH_URL']
 
 That fixes email/password auth. **OAuth still breaks**, because Google requires an exact, pre-registered redirect URI and preview URLs are unknowable in advance. Better Auth ships `oAuthProxy()` for exactly this: register the production callback URL once with the provider, and preview deployments proxy their OAuth flow through it.
 
+Its mechanism is a `baseURL` swap in a before-hook on social sign-in — the outgoing request advertises the *production* callback, while `callbackURL` points at the preview's `/oauth-proxy-callback`. Production then re-encrypts the profile and bounces it back to the preview.
+
+The trap: the plugin has two independent notions of "production URL". `checkSkipProxy()` (am I production? then do nothing) falls back to `BETTER_AUTH_URL`, but the rewrite itself reads **only** `opts.productionURL` — no env fallback, despite the docstring. Omit the option and the proxy silently never engages.
+
+```ts
+plugins: [
+    oAuthProxy({ productionURL: process.env['PRODUCTION_URL'] }),
+    nextCookies(),   // must stay last
+],
+```
+
+Use a *separate* env var from `BETTER_AUTH_URL`: that one is read first by `baseURL`, so setting it on previews would point them at production and break email/password auth there. Also note both environments must share `BETTER_AUTH_SECRET` — the proxied profile is symmetrically encrypted with it — and preview Deployment Protection must be bypassed for the bounce-back to land.
+
 ---
 
 ## Key trade-offs to keep in mind

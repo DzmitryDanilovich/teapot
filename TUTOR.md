@@ -46,7 +46,7 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 17: Deploy to Vercel via CI — `deploymentEnabled: false`, `vercel build --prebuilt`, per-PR Neon branches, `migrate deploy`, preview URL PR comment
 
 ### Up next
-- Task 18: Deploy → test → promote pipeline — e2e against real preview deployments (per-PR Neon branch as test DB), staged production deploys via `--skip-domain`, non-destructive smoke gate, `vercel promote`, Protection Bypass for Automation; delete the artifact-transfer machinery this replaces
+- Task 18: Deploy → test → promote pipeline — e2e against real preview deployments (per-PR Neon branch as test DB), staged production deploys via `--skip-domain`, non-destructive smoke gate, `vercel promote`, Protection Bypass for Automation; delete the artifact-transfer machinery this replaces. Also: make Google OAuth work on previews via Better Auth's `oAuthProxy()` — pass `productionURL` explicitly (the env-var default only covers skip-detection, not the redirect rewrite), keep it separate from `BETTER_AUTH_URL`, and share `BETTER_AUTH_SECRET` across environments
 - Task 19: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
 - Task 20: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
 - Task 21: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
