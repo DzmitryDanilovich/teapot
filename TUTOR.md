@@ -47,12 +47,13 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 
 ### Up next
 - Task 18: Deploy → test → promote pipeline — e2e against real preview deployments (per-PR Neon branch as test DB), staged production deploys via `--skip-domain`, non-destructive smoke gate, `vercel promote`, Protection Bypass for Automation; delete the artifact-transfer machinery this replaces. Also: make Google OAuth work on previews via Better Auth's `oAuthProxy()` — pass `productionURL` explicitly (the env-var default only covers skip-detection, not the redirect rewrite), keep it separate from `BETTER_AUTH_URL`, and share `BETTER_AUTH_SECRET` across environments
-- Task 19: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
-- Task 20: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
-- Task 21: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
-- Task 22: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
-- Task 23: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 24: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
+- Task 19: CodeQL + branch protection — security scanning workflow, required status checks on `main`, no direct pushes, PR-only merges
+- Task 20: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
+- Task 21: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
+- Task 22: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
+- Task 23: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
+- Task 24: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 25: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
