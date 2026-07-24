@@ -1,29 +1,9 @@
 name: Setup
-description: Setup environment, Node.js, pnpm, and dependencies
-
-inputs:
-  ignore-env:
-    description: Whether to ignore setting up the .env file
-    required: false
-    default: 'false'
-  port:
-    description: Port number for the application
-    required: false
-    default: '3000'
+description: Setup Node.js, pnpm, and dependencies
 
 runs:
   using: 'composite'
   steps:
-    - name: Setup .env file
-      if: ${{ inputs.ignore-env != 'true' }}
-      run: |
-        echo "CI=true" >> .env
-        echo "BETTER_AUTH_SECRET=dummy_secret_that_has_32_symbols" >> .env
-        echo "BETTER_AUTH_URL=http://localhost:${{ inputs.port }}" >> .env
-        echo "GOOGLE_CLIENT_ID=dummy_id" >> .env
-        echo "GOOGLE_CLIENT_SECRET=dummy_secret" >> .env
-        echo "PORT=${{ inputs.port }}" >> .env
-      shell: bash
     - name: Setup pnpm
       uses: pnpm/action-setup@v6
     - name: Setup Node.js

@@ -1,0 +1,28 @@
+name: Composite Main
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+  deploy-prod:
+    uses: ./.github/workflows/deploy-prod.yml
+    needs: test
+    secrets: inherit
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    needs: deploy-prod
+    secrets: inherit
+    with:
+      baseURL: ${{ needs.deploy-prod.outputs.deployment_url }}
+      isProduction: true
+  promote:
+    uses: ./.github/workflows/promote.yml
+    needs: [deploy-prod, e2e]
+    secrets: inherit
+    with:
+      baseURL: ${{ needs.deploy-prod.outputs.deployment_url }}

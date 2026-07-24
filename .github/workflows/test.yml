@@ -1,0 +1,21 @@
+name: Test
+description: Run linter, type check, and tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run ESLint
+        run: pnpm lint
+      - name: Run Type check
+        run: pnpm typecheck
+      - name: Run tests
+        run: pnpm test

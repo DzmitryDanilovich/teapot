@@ -1,26 +1,51 @@
 import path from 'node:path';
 
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 
-import { seedUserStorageStatePath } from './e2e/setup/users';
+import {
+    seedUserStorageStatePath,
+    e2eUserStorageStatePath,
+} from './e2e/constants';
 
-dotenv.config({ path: path.resolve(__dirname, `.env${process.env.CI ? '' : '.e2e'}`), override: true });
+const isCI = process.env.CI;
+const isProduction = process.env.isProduction === 'true';
+
+dotenv.config({
+    path: path.resolve(__dirname, `.env${isCI ? '' : '.e2e'}`),
+    override: true,
+});
 
 const port = process.env.PORT || 3001;
 
-export default defineConfig({
-    testDir: './e2e',
-    globalSetup: './e2e/setup/global-setup.ts',
-    fullyParallel: true,
-    retries: process.env.CI ? 2 : 0,
-    reporter: [[process.env.CI ? 'github' : 'list'], ['html']],
-    use: {
-        baseURL: `http://localhost:${port}`,
-        screenshot: 'only-on-failure',
-        trace: process.env.CI ? 'on-first-retry' : 'on',
-    },
+if (isCI && !process.env.baseURL) {
+    throw new Error(
+        'baseURL is not defined. Please set the baseURL environment variable.',
+    );
+}
 
+const commonConfig = {
+    testDir: './e2e',
+    fullyParallel: true,
+};
+
+const ciConfig: PlaywrightTestConfig = {
+    ...commonConfig,
+    retries: 2,
+    reporter: [['github'], ['html']],
+    use: {
+        baseURL: process.env.baseURL,
+        screenshot: 'only-on-failure',
+        trace: 'on-first-retry',
+        extraHTTPHeaders: {
+            'x-vercel-protection-bypass':
+                process.env.vercelAutomationBypassSecret || '',
+            'x-vercel-set-bypass-cookie': 'true',
+        },
+    },
+};
+
+const nonProductionConfig: PlaywrightTestConfig = {
     projects: [
         {
             name: 'auth seed',
@@ -29,19 +54,76 @@ export default defineConfig({
         {
             name: 'teas seed',
             testMatch: 'teas.setup.ts',
-            use: { ...devices['Desktop Chrome'], storageState: seedUserStorageStatePath },
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: seedUserStorageStatePath,
+            },
             dependencies: ['auth seed'],
         },
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'], storageState: seedUserStorageStatePath },
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: seedUserStorageStatePath,
+            },
             dependencies: ['auth seed', 'teas seed'],
         },
     ],
+};
+
+const ciProductionConfig: PlaywrightTestConfig = {
+    ...ciConfig,
+
+    projects: [
+        {
+            name: 'auth setup',
+            testMatch: 'auth-prod.setup.ts',
+            use: {
+                ...devices['Desktop Chrome'],
+            },
+        },
+        {
+            name: 'chromium',
+            grep: /@smoke/,
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: e2eUserStorageStatePath,
+            },
+            dependencies: ['auth setup'],
+        },
+    ],
+};
+
+const ciPreviewConfig: PlaywrightTestConfig = {
+    ...ciConfig,
+    ...nonProductionConfig,
+};
+
+const localConfig: PlaywrightTestConfig = {
+    ...commonConfig,
+    ...nonProductionConfig,
+    globalSetup: './e2e/setup/global-setup.ts',
+    retries: 0,
+    reporter: [['list'], ['html']],
+    use: {
+        baseURL: `http://localhost:${port}`,
+        screenshot: 'only-on-failure',
+        trace: 'on',
+    },
 
     webServer: {
-        command: `${process.env.CI ? '' : 'pnpm build && '}pnpm start --port ${port}`,
+        command: `pnpm build && pnpm start --port ${port}`,
         url: `http://localhost:${port}`,
         reuseExistingServer: false,
     },
-});
+};
+
+const getConfig = (): PlaywrightTestConfig => {
+    if (isCI) {
+        return isProduction ? ciProductionConfig : ciPreviewConfig;
+    }
+
+    return localConfig;
+};
+
+export default defineConfig(getConfig());

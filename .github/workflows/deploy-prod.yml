@@ -1,0 +1,43 @@
+name: Deploy Production
+on:
+  workflow_call:
+    outputs:
+      deployment_url:
+        description: 'The URL of the production deployment'
+        value: ${{ jobs.deploy.outputs.deployment_url }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      deployment_url: ${{ steps.set-output.outputs.deployment_url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout repository
+        uses: 'actions/checkout@v7'
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Build the application
+        run: >-
+          pnpm exec vercel build
+          --yes
+          --target=production
+          --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Migrate database
+        env: 
+          DATABASE_URL: ${{ secrets.PROD_DB_URL }}
+        run: pnpm exec prisma migrate deploy
+      - name: Deploy to Vercel
+        run: >-
+          pnpm exec vercel deploy
+          --yes
+          --prebuilt
+          --prod
+          --skip-domain
+          --token=${{ secrets.VERCEL_TOKEN }}
+          > deployment_url.txt
+      - name: Set deployment URL output
+        id: set-output
+        run: echo "deployment_url=$(tail -n1 deployment_url.txt)" >> $GITHUB_OUTPUT
