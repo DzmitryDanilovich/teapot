@@ -1,0 +1,54 @@
+name: End-to-End Tests
+
+on:
+  workflow_call:
+    inputs:
+      baseURL:
+        description: 'Base URL for the application under test'
+        required: false
+        type: string
+      isProduction:
+        description: 'Flag indicating if the environment is production'
+        required: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      baseURL:
+        description: 'Base URL for the application under test'
+        required: false
+        type: string
+      isProduction:
+        description: 'Flag indicating if the environment is production'
+        required: false
+        type: boolean
+
+env:
+  baseURL: ${{ inputs.baseURL }}
+  isProduction: ${{ inputs.isProduction }}
+  e2eUserEmail: ${{ secrets.E2E_USER_EMAIL }}
+  e2eUserPassword: ${{ secrets.E2E_USER_PASSWORD }}
+  vercelAutomationBypassSecret: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET}}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: 'actions/checkout@v7'
+      - name: Setup
+        uses: ./.github/actions/setup
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Run end-to-end tests
+        run: pnpm e2e
+      - name: Upload Playwright Test Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 5

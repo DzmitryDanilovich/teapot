@@ -1,0 +1,67 @@
+name: Deploy Preview
+on:
+  workflow_call:
+    outputs:
+      deployment_url:
+        description: 'The URL of the preview deployment'
+        value: ${{ jobs.deploy.outputs.deployment_url }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      deployment_url: ${{ steps.set-output.outputs.deployment_url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout repository
+        uses: 'actions/checkout@v7'
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Create Neon branch
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: preview/pr-${{ github.event.pull_request.number }}
+          prisma: true
+      - name: Reset Neon branch
+        uses: neondatabase/reset-branch-action@v1
+        if: ${{ steps.neon.outputs.created == 'false' }}
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          parent: true
+          branch: preview/pr-${{ github.event.pull_request.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+      - name: Build the application
+        run: >-
+          pnpm exec vercel build
+          --yes
+          --target=preview
+          --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Migrate database
+        env: 
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+        run: pnpm exec prisma migrate deploy
+      - name: Deploy to Vercel
+        run: >-
+          pnpm exec vercel deploy
+          --yes
+          --prebuilt
+          -e DATABASE_URL="${{ steps.neon.outputs.db_url_pooled }}"
+          --token=${{ secrets.VERCEL_TOKEN }}
+          > deployment_url.txt
+      - name: Comment deployment URL on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh pr comment ${{ github.event.pull_request.number }}
+          --body "Preview deployment URL: $(tail -n1 deployment_url.txt)"
+      - name: Set deployment URL output
+        id: set-output
+        run: echo "deployment_url=$(tail -n1 deployment_url.txt)" >> $GITHUB_OUTPUT

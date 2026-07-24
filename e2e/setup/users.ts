@@ -1,5 +1,3 @@
-export const seedUserStorageStatePath = 'e2e/.auth/user.json';
-
 export const SEED_USER: { name: string; email: string; password: string } = {
     name: 'Test User',
     email: 'test@test.test',

@@ -1005,6 +1005,44 @@ plugins: [
 
 Use a *separate* env var from `BETTER_AUTH_URL`: that one is read first by `baseURL`, so setting it on previews would point them at production and break email/password auth there. Also note both environments must share `BETTER_AUTH_SECRET` — the proxied profile is symmetrically encrypted with it — and preview Deployment Protection must be bypassed for the bounce-back to land.
 
+Local dev needs none of this. Register `http://localhost:3000/api/auth/callback/google` as a second authorized redirect URI (Google permits `http://localhost`), leave `PRODUCTION_URL` unset locally, and set `BETTER_AUTH_URL=http://localhost:3000`. `oAuthProxy` self-disables when the resolved production origin equals the current origin — so locally it skips and you get direct OAuth, keeping the production secret off developer laptops.
+
+---
+
+## Deploy → test → promote pipeline
+
+### Test the artifact, not a rehearsal of it
+
+The weaker pattern builds locally, tests that local build, then deploys — so the thing you tested and the thing you shipped are different processes. Stronger: deploy first, then run the e2e suite **against the real deployment URL**. Now the artifact under test is the artifact that ships.
+
+Structure it as reusable workflows (`workflow_call`) with thin orchestrators — `composite-pr.yml` (on `pull_request`) and `composite-main.yml` (on `push` to `main`) — each wiring the same building blocks (`test`, `deploy`, `e2e`, `promote`) in a different order. Pass the deployment URL between jobs via `outputs`.
+
+### Feeding the deployment URL to Playwright
+
+The deploy job captures its URL (`vercel deploy … > url.txt`, `tail -n1` into `$GITHUB_OUTPUT`); the orchestrator passes it as an input to the e2e workflow, which exports it as an env var; `playwright.config.ts` reads it into `use.baseURL` when `CI` is set, and drops `webServer` entirely (nothing to start locally). `storageState` auth setup then runs against that deployed URL — signing in through the real app and capturing the real session cookie — so every test reuses a genuine session against the deployment.
+
+### Staged production deploy + promote
+
+```bash
+vercel deploy --prod --skip-domain   # builds & deploys to prod, but domain still points at old build
+# run smoke checks against the returned URL
+vercel promote <url>                 # move the domain to the new build
+```
+
+`--skip-domain` is the safety valve: production is fully built and live at a URL, but real traffic stays on the previous build until `promote`. A failing smoke check simply means you never promote — broken **code** never reaches the domain.
+
+What it does **not** protect: the database migration ran during the deploy step, before the smoke check. `migrate deploy` is forward-only; a failed smoke leaves the schema already migrated. So the guarantee is only as good as your migration discipline — every migration must be backward compatible (expand/contract) so the still-live old code keeps working against the new schema. For genuinely risky migrations, snapshot first: Neon's branching / point-in-time restore is the backstop, since code rolls back instantly but schema does not.
+
+### Non-destructive smoke gate
+
+The production e2e must not mutate prod. Split by Playwright tag: previews run the full CRUD suite against a throwaway Neon branch; production runs only `--grep @smoke` — read-only assertions plus logged-out redirects. Auth for the prod smoke uses a **persistent** account that is signed *in* (never signed up), so it creates no user rows; its session cookie is transient. The environment is selected in `playwright.config.ts` (`isProduction === 'true'` — a real boolean check, not string truthiness), which swaps the project list and, critically, drops `globalSetup` so `prisma migrate reset` can never run against a deployed database.
+
+`migrate deploy` (apply committed migrations, safe, runs against prod) and `migrate reset` (wipe the DB, test-only, must never touch prod) are different commands — the prod config omits the reset by having no `globalSetup`.
+
+### Docs-only pushes
+
+`paths-ignore: ['**/*.md']` on the `main` push keeps a documentation change from triggering a production deploy. (Trade-off for later: with required status checks, `paths-ignore` produces *no* check at all, which a branch-protection rule can block on — a `changes`-filter job that runs but short-circuits the expensive steps avoids that.)
+
 ---
 
 ## Key trade-offs to keep in mind
