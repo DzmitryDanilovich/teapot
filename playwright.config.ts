@@ -37,6 +37,11 @@ const ciConfig: PlaywrightTestConfig = {
         baseURL: process.env.baseURL,
         screenshot: 'only-on-failure',
         trace: 'on-first-retry',
+        extraHTTPHeaders: {
+            'x-vercel-protection-bypass':
+                process.env.vercelAutomationBypassSecret || '',
+            'x-vercel-set-bypass-cookie': 'true',
+        },
     },
 };
 
@@ -92,15 +97,6 @@ const ciProductionConfig: PlaywrightTestConfig = {
 const ciPreviewConfig: PlaywrightTestConfig = {
     ...ciConfig,
     ...nonProductionConfig,
-
-    use: {
-        ...ciConfig.use,
-        extraHTTPHeaders: {
-            'x-vercel-protection-bypass':
-                process.env.vercelAutomationBypassSecret || '',
-            'x-vercel-set-bypass-cookie': 'true',
-        },
-    },
 };
 
 const localConfig: PlaywrightTestConfig = {
