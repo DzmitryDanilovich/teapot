@@ -1045,6 +1045,64 @@ The production e2e must not mutate prod. Split by Playwright tag: previews run t
 
 ---
 
+## Pipeline gotchas (hard-won)
+
+Everything below cost a red run to learn. Symptom → cause → fix.
+
+### Reusable workflows cross three boundaries, and nothing crosses by default
+
+Splitting a monolithic workflow into `workflow_call` files (`composite-pr` calling `test`/`deploy`/`e2e`) is clean, but a called workflow does **not** inherit the caller's context. Three separate things must be handed over explicitly:
+
+- **Secrets** — a called workflow sees no secrets unless the caller passes `secrets: inherit` (or maps them explicitly). Symptom: `${{ secrets.X }}` resolves to empty inside the callee, e.g. `Input required and not supplied: api_key`, or a blank `VERCEL_ORG_ID:` in the logged env.
+- **Permissions** — the callee's `permissions:` are *capped by the caller's*. If the caller grants nothing, `pull-requests: write` in the callee is rejected as an **invalid workflow file** (`is requesting 'pull-requests: write', but is only allowed 'pull-requests: none'`). Fix: grant it on the calling job — or, better, remove the request from the callee if it never actually needed it (the prod deploy job asked for `pull-requests: write` but had no PR to comment on).
+- **Env/context** — top-level `env:` and defaults don't flow down either.
+
+These all worked in the monolithic version because there was no boundary. The moment you `uses:` a reusable workflow, each has to be threaded through.
+
+### GitHub Actions outputs are strings — `!` on them lies
+
+`if: ${{ !steps.x.outputs.created }}` never fires the way you expect. Step outputs are **strings**, and in GHA a non-empty string is truthy — so `!'false'` is `false` *and* `!'true'` is `false`. The step is skipped in both cases. Symptom here: the Neon branch reset silently never ran, so stale data persisted across pushes. Fix: compare explicitly — `if: ${{ steps.x.outputs.created == 'false' }}`.
+
+### Vercel Deployment Protection blocks CI browsers
+
+Preview deployments (and, under Standard Protection, *any* deployment reached by its deployment URL rather than a production custom domain) sit behind a "Log in to Vercel" wall. Playwright loads that SSO page instead of your app and every locator times out. Fix: enable **Protection Bypass for Automation**, store the secret, and send it on every request via Playwright `extraHTTPHeaders`:
+
+```ts
+extraHTTPHeaders: {
+    'x-vercel-protection-bypass': process.env.vercelAutomationBypassSecret || '',
+    'x-vercel-set-bypass-cookie': 'true',
+},
+```
+
+The header names have no "automation" in them despite the feature/secret being named that way. `extraHTTPHeaders` applies to *both* the `request` context and the browser, so API-context setup calls get through too. Put this in the **shared** `ciConfig` — the staged production smoke needs it just as much as previews, because `--skip-domain` makes the smoke hit the protected deployment URL.
+
+### Better Auth rejects Origin on request-context calls
+
+Playwright's `APIRequestContext` (used in `*.setup.ts` to sign in/up via `/api/auth/*`) sends **no `Origin` header** — it's not a browser. Better Auth's CSRF protection then returns `403`. Two distinct failures:
+
+- `MISSING_OR_NULL_ORIGIN` — no Origin at all. Fix: pass one from the `baseURL` fixture: `request.post(url, { data, headers: { origin: baseURL } })`. (Only the setup files need this; browser-driven specs reach Better Auth through Server Actions server-side, and the browser sends a real Origin anyway.)
+- `INVALID_ORIGIN` — Origin present but untrusted. Happens on prod because `baseURL` is pinned to the stable production domain (from `BETTER_AUTH_URL`) while the smoke hits the *deployment* URL. Fix: trust the deployment's own URL — `trustedOrigins: process.env.VERCEL_URL ? ['https://' + process.env.VERCEL_URL] : []`.
+
+Don't "fix" `INVALID_ORIGIN` by dropping `BETTER_AUTH_URL` so `baseURL` floats to `VERCEL_URL` — that breaks real production, because `VERCEL_URL` is the ephemeral per-deploy hash URL, not the stable domain real users and OAuth callbacks use.
+
+### A `--prod --skip-domain` deploy has production *identity* before it has production *traffic*
+
+"Production" means two things: the build target/env (which env vars, which canonical URL) and whether the domain routes to it. A staged deploy is production in the first sense immediately — it's the production build with production env, so its `baseURL` is correctly the stable domain even before `promote`. `promote` only flips *traffic*. This is blue-green: the staged deployment is the green slot (full production identity, tested via a side URL); `promote` is the load-balancer swap. So `baseURL` must already be the stable domain while staged, and the side-door deployment URL is handled via `trustedOrigins`, not by changing identity.
+
+### Throwaway-per-PR ≠ throwaway-per-push
+
+`neondatabase/create-branch-action` **reuses** an existing branch (it doesn't recreate or reset it). A Neon branch is created on first PR push and deleted on PR close — so on a *second* push to the same PR it still holds the previous run's data, and the seed collides (`409 user exists`). Fix: reset the branch to its parent when it was reused — `neondatabase/reset-branch-action` guarded by `if: steps.neon.outputs.created == 'false'`.
+
+### Local dependency bins aren't on a workflow step's PATH
+
+A bare `vercel promote …` in a `run:` step exits **127** even though `vercel` is an installed devDependency. Installing a dep puts its binary in `node_modules/.bin`, which is **not** on a raw shell step's `PATH` (only package *scripts* get that prepended). Resolve local bins through `pnpm exec vercel …` (or `npx`), the way the deploy jobs already do.
+
+### `vitest/globals` in tsconfig masks missing imports across runtimes
+
+`"types": ["vitest/globals"]` makes `expect`/`describe`/`vi` ambient for the *whole* project's type-checker — including Playwright files, where those globals don't exist at runtime. So a Playwright file using `expect` without importing it type-checks clean but throws `expect is not defined` at runtime; `no-undef` is off under typescript-eslint, and Vitest never runs e2e files, so every static gate misses it. The runtime-honest fix is to not use ambient test globals at all (import `expect` explicitly in both suites); scoping via a second tsconfig works but every extra config must be wired into the typecheck script by hand, or it's dead.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
