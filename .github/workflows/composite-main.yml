@@ -5,15 +5,22 @@ on:
     branches: [main]
     paths-ignore:
       - '**/*.md'
+      - .github/**/*
 
 jobs:
   test:
+    permissions:
+      contents: read
     uses: ./.github/workflows/test.yml
   deploy-prod:
+    permissions:
+      contents: read
     uses: ./.github/workflows/deploy-prod.yml
     needs: test
     secrets: inherit
   e2e:
+    permissions:
+      contents: read
     uses: ./.github/workflows/e2e.yml
     needs: deploy-prod
     secrets: inherit
@@ -21,6 +28,8 @@ jobs:
       baseURL: ${{ needs.deploy-prod.outputs.deployment_url }}
       isProduction: true
   promote:
+    permissions:
+      contents: read
     uses: ./.github/workflows/promote.yml
     needs: [deploy-prod, e2e]
     secrets: inherit

@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       deployment_url: ${{ steps.set-output.outputs.deployment_url }}
     env:

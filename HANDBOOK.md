@@ -1103,6 +1103,34 @@ A bare `vercel promote …` in a `run:` step exits **127** even though `vercel` 
 
 ---
 
+## SAST — CodeQL
+
+### SAST vs a linter
+
+CodeQL is **static application security testing** — it builds a queryable database of the code and runs **taint-tracking** queries that follow data from a **source** (untrusted input: request body, query param, form field) to a **sink** (a dangerous operation: `exec`, a raw SQL string, `dangerouslySetInnerHTML`, a filesystem path). The defining capability is that it tracks that flow **across function returns and file boundaries** — whole-program dataflow.
+
+A linter (ESLint) works one file at a time on the syntax tree with no whole-program model, so it structurally cannot see that a value read in `route.ts` passes through two helpers in other files and reaches a shell call. That cross-boundary source→sink class — injection, path traversal, SSRF, unsafe deserialization — is what CodeQL catches and a linter can't. (Distinct again from **SCA** / Dependabot, which scans *dependency versions* against a vuln DB — not your own code.)
+
+### Why the weekly `schedule`
+
+CodeQL's query packs are updated continuously. A `schedule:` (cron) run re-analyzes **unchanged** code against **newer queries** — so a vulnerable pattern in code merged months ago, that no push or PR is touching, gets flagged when a query recognizing it ships later. Push/PR runs only ever see changed code with the rules that existed at merge time; the cron re-examines the whole existing codebase as CodeQL itself improves.
+
+### No build step for JS/TS (`build-mode: none`)
+
+Compiled languages need `autobuild` because the source alone doesn't reveal resolved relationships — CodeQL hooks the compiler to observe concrete overloads and instantiated generics (C# `List<T>` → real instantiated types the source doesn't spell out). JS/TS needs no build: imports name exactly what's used, and TS types are erased, so transpiled JS runs as written — CodeQL parses the source directly.
+
+### Advanced setup + least-privilege permissions
+
+Advanced setup = a workflow file you own (`codeql.yml`) rather than click-to-enable, so you control triggers and can add the `actions` language pack (which analyzes the workflow files themselves — that's what flags missing `permissions:` blocks). The analyze job needs `security-events: write` to upload SARIF to Security → Code scanning.
+
+CodeQL's own "Workflow does not contain permissions" query is a hygiene rule: it flags **any** workflow/job with no explicit `permissions:` block (implicit = possibly write-all). Fix by giving every workflow an explicit block — `contents: read` as the baseline — then widening per-job only where needed (`security-events: write` for analyze, `pull-requests: write` for the PR-commenting deploy). `GITHUB_TOKEN` scope is **hierarchical**: workflow-level sets the default, job-level *replaces* it, and a called reusable workflow is *capped by its caller* — so an elevated scope like `pull-requests: write` must be granted on both the caller (to raise the ceiling) and the callee (to use it). Never silence the finding by flipping the repo default to write-all.
+
+### Parallel steps (native, 2026)
+
+`parallel:` is a step-level key (shipped 2026-06) that runs a group of steps concurrently **on the same runner** (one checkout + setup shared), converting them to background steps with an implicit wait. Cheaper than separate parallel *jobs* (which each re-run checkout + install on isolated runners). The trade-off matters for branch protection: parallel *steps* live under one job = **one** required status check; parallel *jobs* = separately-requireable checks. Choose by how granular you want required checks to be.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.
