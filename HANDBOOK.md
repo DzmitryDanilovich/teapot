@@ -1131,6 +1131,36 @@ CodeQL's own "Workflow does not contain permissions" query is a hygiene rule: it
 
 ---
 
+## Quality gate — SonarCloud
+
+### Where it sits vs ESLint and CodeQL
+
+Three analyzers, three depths — not redundant:
+- **ESLint** — per-file style/correctness patterns, instant editor feedback.
+- **CodeQL** — security via cross-boundary taint tracking (source→sink).
+- **SonarCloud** — maintainability (code smells, cyclomatic complexity, **duplication**) plus its own bug/security rules, **and coverage**. Duplication % and coverage-on-new-code are the things *only* Sonar reports — neither ESLint nor CodeQL measures how much code the tests exercise.
+
+Sonar's security rules overlap CodeQL; that's fine — teams run both because Sonar's strength is the maintainability + coverage quality gate, CodeQL's is deep dataflow security.
+
+### Setup
+
+- `sonar-project.properties` — `sonar.organization`, `sonar.projectKey`, `sonar.sources=src`, `sonar.tests=src,e2e`, `sonar.test.inclusions` for `*.test.*`/`*.spec.*`.
+- **`sonar.exclusions=src/generated/**`** — exclude generated Prisma client, which `postinstall: prisma generate` recreates in CI even though it's gitignored; without this it floods the gate with non-issues. (The property is `sonar.exclusions` — `sonar.source.exclusions` is **not** a real property and is silently ignored.)
+- Action: `SonarSource/sonarqube-scan-action` with only `SONAR_TOKEN` in env. **`SONAR_HOST_URL` is not needed for SonarCloud** — it's only for self-hosted SonarQube Server. Branch/PR identifiers auto-detect from the Actions event; don't pass them.
+- **`fetch-depth: 0`** on the checkout — Sonar needs full git history for SCM blame and new-code detection. The default shallow clone degrades "Clean as You Code."
+
+### Coverage is CI-generated, not run by Sonar
+
+Sonar reads an `lcov` file **your CI produces** (`sonar.javascript.lcov.reportPaths=coverage/vitest/lcov.info`); it does not run your tests. Two consequences:
+1. The scan must run **after** coverage exists — the `sonar` job `needs: test`, and coverage rides across as an artifact (test job runs `pnpm test:coverage`, uploads `coverage/vitest`; sonar downloads it). Scan-before-coverage → Sonar reports 0%.
+2. Sonar's coverage % can differ from `vitest --coverage` locally because they count over **different denominators** — `sonar.exclusions`, the sources/tests split, and Sonar-side coverage exclusions mean Sonar's scope isn't identical to Vitest's. Same lcov, different files counted.
+
+### Clean as You Code (default Quality Gate)
+
+Sonar's default gate evaluates **new/changed code only**, not the whole codebase. The failure mode it avoids: gating on *total* coverage % on an existing project sitting at, say, 40% would block **every** PR until someone back-fills tests for untouched code — so teams just disable the gate. Gating on new code means each PR only cleans up what it changed, and the codebase ratchets upward organically without ever blocking delivery. It's what makes a quality gate survivable on a real, imperfect codebase.
+
+---
+
 ## Key trade-offs to keep in mind
 
 - **Next.js gives a lot for free** (SSR, routing, API layer, image optimization, bundler) but is opinionated. You work within its conventions.

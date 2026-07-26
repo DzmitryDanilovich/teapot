@@ -115,7 +115,7 @@ describe('SignUpForm', () => {
             await userEvent.click(submitButton);
 
             // assert
-            expect(screen.getByText(expectedError)).toBeInTheDocument();
+            expect(await screen.findByText(expectedError)).toBeInTheDocument();
         },
     );
 
@@ -144,6 +144,6 @@ describe('SignUpForm', () => {
         await userEvent.click(submitButton);
 
         // assert
-        expect(screen.getByText('Form error')).toBeInTheDocument();
+        expect(await screen.findByText('Form error')).toBeInTheDocument();
     });
 });
