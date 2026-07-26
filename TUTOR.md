@@ -57,9 +57,9 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 17: Deploy to Vercel via CI — `deploymentEnabled: false`, `vercel build --prebuilt`, per-PR Neon branches, `migrate deploy`, preview URL PR comment
 - Task 18: Deploy → test → promote pipeline — reusable workflows, e2e against real preview deployments, staged prod deploy via `--skip-domain`, non-destructive `@smoke` gate with a persistent sign-in user, `vercel promote`, Google OAuth on previews via `oAuthProxy()`
 - Task 19: CodeQL — advanced-setup SAST workflow (`javascript-typescript` + `actions` packs), explicit least-privilege `permissions` across all workflows, parallel `test` steps, `.github/**` path-ignore on main
+- Task 20: SonarCloud — CI-based scan with Vitest `lcov` coverage via artifact hand-off, `sonar.exclusions` for generated code, Clean-as-You-Code gate; contrast with ESLint/CodeQL
 
 ### Up next
-- Task 20: SonarCloud — quality gate, `lcov` coverage integration from Vitest, code smells and duplication; contrast with ESLint/CodeQL
 - Task 21: GitHub Deployments & Environments — native Actions `environment:` key, static `preview` env on PR deploys + `production` env at `promote` go-live, deployment status vs. required status check, Vercel Git integration stays off (`deploymentEnabled: false`)
 - Task 22: Branch protection — required status checks (CI, CodeQL, Sonar), no direct pushes to `main`, PR-only merges
 - Task 23: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline

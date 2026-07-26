@@ -1,0 +1,28 @@
+name: SonarCloud
+description: Run SonarCloud analysis
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Download test coverage artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: vitest-coverage
+          path: coverage/vitest
+      - name: Run SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

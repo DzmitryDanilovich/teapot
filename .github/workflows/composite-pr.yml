@@ -11,6 +11,12 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/test.yml
+  sonar:
+    permissions:
+     contents: read
+    uses: ./.github/workflows/sonar.yml
+    needs: test
+    secrets: inherit
   deploy-preview:
     permissions:
       contents: read
