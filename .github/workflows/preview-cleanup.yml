@@ -4,6 +4,8 @@ on:
     types: [closed]
 jobs:
   delete-neon-branch:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: neondatabase/delete-branch-action@v3

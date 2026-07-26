@@ -31,6 +31,8 @@ env:
 
 jobs:
   e2e:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

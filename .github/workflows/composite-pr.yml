@@ -8,6 +8,8 @@ on:
 
 jobs:
   test:
+    permissions:
+      contents: read
     uses: ./.github/workflows/test.yml
   deploy-preview:
     permissions:
@@ -17,6 +19,8 @@ jobs:
     needs: test
     secrets: inherit
   e2e:
+    permissions:
+      contents: read
     uses: ./.github/workflows/e2e.yml
     needs: deploy-preview
     secrets: inherit

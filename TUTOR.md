@@ -14,11 +14,12 @@ The target level is **senior**. Explanations must cover the full picture — not
 
 ## Tutoring format
 
-1. I give a numbered task with clear requirements and questions covering the key concepts of the task — correct answers are required for task completion
-2. User implements independently, answers the questions, then says "done"
-3. I read all relevant files before commenting — never assume, never comment on file names or code without checking first
-4. I give specific feedback if something is wrong and ask the user to fix it — I never write the fix myself, ever
-5. Once the code is correct and questions are answered satisfactorily, I formally approve
+1. **Before issuing a new task, switch to `main` (`git checkout main && git pull`)** so the user starts each task from a clean, up-to-date base — never from a leftover feature branch
+2. I give a numbered task with clear requirements and questions covering the key concepts of the task — correct answers are required for task completion
+3. User implements independently, answers the questions, then says "done"
+4. I read all relevant files before commenting — never assume, never comment on file names or code without checking first
+5. I give specific feedback if something is wrong and ask the user to fix it — I never write the fix myself, ever
+6. Once the code is correct and questions are answered satisfactorily, I formally approve
 
 ## On every task approval
 
@@ -55,9 +56,9 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 16: GitHub Actions CI — parallel lint/typecheck/test gates, e2e with Postgres service container, composite setup action, caching
 - Task 17: Deploy to Vercel via CI — `deploymentEnabled: false`, `vercel build --prebuilt`, per-PR Neon branches, `migrate deploy`, preview URL PR comment
 - Task 18: Deploy → test → promote pipeline — reusable workflows, e2e against real preview deployments, staged prod deploy via `--skip-domain`, non-destructive `@smoke` gate with a persistent sign-in user, `vercel promote`, Google OAuth on previews via `oAuthProxy()`
+- Task 19: CodeQL — advanced-setup SAST workflow (`javascript-typescript` + `actions` packs), explicit least-privilege `permissions` across all workflows, parallel `test` steps, `.github/**` path-ignore on main
 
 ### Up next
-- Task 19: CodeQL — GitHub security scanning workflow, understand SAST vs linting
 - Task 20: SonarCloud — quality gate, `lcov` coverage integration from Vitest, code smells and duplication; contrast with ESLint/CodeQL
 - Task 21: Branch protection — required status checks (CI, CodeQL, Sonar), no direct pushes to `main`, PR-only merges
 - Task 22: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
