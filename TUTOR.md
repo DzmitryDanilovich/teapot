@@ -14,7 +14,7 @@ The target level is **senior**. Explanations must cover the full picture — not
 
 ## Tutoring format
 
-1. **Before issuing a new task, switch to `main` (`git checkout main && git pull`)** so the user starts each task from a clean, up-to-date base — never from a leftover feature branch
+1. **Before issuing a new task, check out `main` AND pull the latest from remote (`git checkout main && git pull origin main`)** — always sync with the remote head so the task starts from a clean, up-to-date base that includes just-merged PRs, never from a stale local `main` or a leftover feature branch
 2. I give a numbered task with clear requirements and questions covering the key concepts of the task — correct answers are required for task completion
 3. User implements independently, answers the questions, then says "done"
 4. I read all relevant files before commenting — never assume, never comment on file names or code without checking first
@@ -60,13 +60,14 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 
 ### Up next
 - Task 20: SonarCloud — quality gate, `lcov` coverage integration from Vitest, code smells and duplication; contrast with ESLint/CodeQL
-- Task 21: Branch protection — required status checks (CI, CodeQL, Sonar), no direct pushes to `main`, PR-only merges
-- Task 22: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
-- Task 23: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
-- Task 24: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
-- Task 25: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
-- Task 26: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 27: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
+- Task 21: GitHub Deployments & Environments — native Actions `environment:` key, static `preview` env on PR deploys + `production` env at `promote` go-live, deployment status vs. required status check, Vercel Git integration stays off (`deploymentEnabled: false`)
+- Task 22: Branch protection — required status checks (CI, CodeQL, Sonar), no direct pushes to `main`, PR-only merges
+- Task 23: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
+- Task 24: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
+- Task 25: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
+- Task 26: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
+- Task 27: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
+- Task 28: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
 ### Deferred
 
