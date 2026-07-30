@@ -9,9 +9,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: Preview
+      url: ${{ steps.set-output.outputs.deployment_url }}
     permissions:
       contents: read
-      pull-requests: write
     outputs:
       deployment_url: ${{ steps.set-output.outputs.deployment_url }}
     env:
@@ -56,12 +58,6 @@ jobs:
           -e DATABASE_URL="${{ steps.neon.outputs.db_url_pooled }}"
           --token=${{ secrets.VERCEL_TOKEN }}
           > deployment_url.txt
-      - name: Comment deployment URL on PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh pr comment ${{ github.event.pull_request.number }}
-          --body "Preview deployment URL: $(tail -n1 deployment_url.txt)"
       - name: Set deployment URL output
         id: set-output
         run: echo "deployment_url=$(tail -n1 deployment_url.txt)" >> $GITHUB_OUTPUT

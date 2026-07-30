@@ -59,8 +59,9 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 19: CodeQL — advanced-setup SAST workflow (`javascript-typescript` + `actions` packs), explicit least-privilege `permissions` across all workflows, parallel `test` steps, `.github/**` path-ignore on main
 - Task 20: SonarCloud — CI-based scan with Vitest `lcov` coverage via artifact hand-off, `sonar.exclusions` for generated code, Clean-as-You-Code gate; contrast with ESLint/CodeQL
 
-### Up next
 - Task 21: GitHub Deployments & Environments — native Actions `environment:` key, static `preview` env on PR deploys + `production` env at `promote` go-live, deployment status vs. required status check, Vercel Git integration stays off (`deploymentEnabled: false`)
+
+### Up next
 - Task 22: Branch protection — required status checks (CI, CodeQL, Sonar), no direct pushes to `main`, PR-only merges
 - Task 23: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
 - Task 24: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
