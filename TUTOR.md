@@ -64,17 +64,48 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 22: Branch protection — ruleset on `main` (PR required, 0 approvals, linear history, no force-push), required checks `test`/`e2e`/Sonar/CodeQL, `paths-ignore` removed from PR triggers to avoid the never-reporting-check trap
 
 ### Up next
-- Task 23: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
-- Task 24: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
-- Task 25: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
-- Task 26: Zustand — client-side state management; introduce when Untappd redesign adds complex client state
-- Task 27: Refactor forms to use React Hook Form (industry standard, ~10M weekly downloads)
-- Task 28: Refactor forms to use Conform (Server Action-native alternative) — contrast with RHF
 
-### Deferred
+Every task below ships a real feature. The Next.js concept it teaches is named after the em dash — but the deliverable is app evolution, not an exercise. Together they take Teapot from a working CRUD demo to something that behaves like a product.
 
-- **Untappd redesign**: Tea model needs splitting into a shared catalogue + per-user check-ins. Current user-scoped model is intentionally temporary.
-- **i18n**: Defer `next-intl`; use a constants file until localisation is actually needed.
+**Ordering principle: adopt cross-cutting concerns before writing the code they cut across.** Anything that touches every future file — i18n, the form library, route structure, error boundaries, accessibility — comes first, so it is never retrofitted across a grown codebase. Only genuinely feature-dependent topics (caching, SEO, streaming, PPR) wait for the feature that gives them meaning.
+
+**Phase 0 — finish the security thread**
+- Task 23: Dependabot — automated dependency update PRs, grouping, SHA-pinned actions (`pinact`), Dependabot's restricted secret context vs. required checks
+
+**Phase 1 — foundations, adopted before any more code is written**
+- Task 24: i18n — `next-intl`, extract every existing string; from here on no hardcoded copy is added anywhere
+- Task 25: Forms, decided once — spike React Hook Form *and* Conform on a real form, compare, commit to one, refactor the existing three; every later form uses the chosen approach
+- Task 26: App structure & error handling — route groups (`(marketing)` vs `(app)`), segment-level `error.tsx`, `global-error.tsx`, `not-found.tsx`; cheap to establish now with 7 routes, expensive to retrofit across 30
+- Task 27: Accessibility baseline — `eslint-plugin-jsx-a11y`, `axe` assertions in Playwright, focus/keyboard conventions to build against rather than remediate
+
+**Phase 2 — the real data model (the Untappd redesign)**
+- Task 28: Split `Tea` into a shared catalogue + per-user `CheckIn` (rating, notes, date) — expand/contract migration against live data, backfill script, backward-compatible steps
+- Task 29: Catalogue browse + check-in flow — public tea catalogue, aggregate ratings, personal check-in history; the feature that unlocks everything below
+
+**Phase 3 — rendering & caching (the biggest knowledge gap)**
+- Task 30: Static rendering & ISR for the catalogue — `generateStaticParams`, static vs dynamic boundary, why auth-gated routes opt out, `revalidate`
+- Task 31: Cache Components — `use cache`, `cacheLife`, `cacheTag`, and `revalidateTag` fired on check-in creation
+- Task 32: Streaming & Suspense — feed with `loading.tsx`, `<Suspense>` boundaries and skeletons around the slow aggregate-rating query
+- Task 33: Partial Prerendering — static catalogue shell with dynamic per-user holes on the tea detail page
+
+**Phase 4 — discovery & content**
+- Task 34: Metadata & SEO — `generateMetadata` per tea, `opengraph-image`, `sitemap.ts`, `robots.ts`, canonical URLs
+- Task 35: Images — `next/image` for tea photos, check-in photo upload via Vercel Blob, responsive `sizes`, blur placeholders
+
+**Phase 5 — advanced routing**
+- Task 36: Parallel & intercepting routes — check-in modal with its own shareable URL via `@modal` + `(.)` interception (route groups already in place from Task 26)
+
+**Phase 6 — public API & client-side data**
+- Task 37: Route Handlers — public REST API for the catalogue (`src/app/api/`), when to use them vs Server Actions, CORS, caching
+- Task 38: TanStack Query — infinite-scroll check-in feed, optimistic check-ins; contrast with Server Components
+- Task 39: Search & URL state — `searchParams`-driven catalogue filtering, `useOptimistic`, shareable/bookmarkable result URLs
+- Task 40: Zustand — draft state across the multi-step check-in modal
+
+**Phase 7 — production polish**
+- Task 41: Performance — `next/dynamic`, code splitting, bundle analysis, Core Web Vitals
+- Task 42: Proxy beyond auth — rewrites, redirects, security headers, rate limiting
+- Task 43: Transactional email — verification and check-in notifications (Better Auth + Resend), React Email templates
+- Task 44: Observability — Vercel Analytics & Speed Insights, `instrumentation.ts`, structured logging, error tracking
 
 ## Tech stack
 
