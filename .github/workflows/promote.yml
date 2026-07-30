@@ -11,6 +11,9 @@ on:
 jobs:
   promote:
     runs-on: ubuntu-latest
+    environment:
+      name: Production
+      url: ${{ vars.PRODUCTION_URL }}
     permissions:
       contents: read
     steps:

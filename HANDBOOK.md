@@ -1043,6 +1043,45 @@ The production e2e must not mutate prod. Split by Playwright tag: previews run t
 
 `paths-ignore: ['**/*.md']` on the `main` push keeps a documentation change from triggering a production deploy. (Trade-off for later: with required status checks, `paths-ignore` produces *no* check at all, which a branch-protection rule can block on — a `changes`-filter job that runs but short-circuits the expensive steps avoids that.)
 
+### GitHub Environments
+
+An Environment is **not** a deployment slot — it's a named bucket for scoped secrets/variables and protection rules, plus a deployment timeline. Many deployments can target one environment: a single static `preview` env serves every PR, because Vercel already isolates the real deployments (unique URL + its own Neon branch). Dynamic per-PR env names (`preview-pr-42`) exist but can't carry UI-configured secrets or rules, and buy nothing when the platform already isolates.
+
+Attach with the job-level `environment:` key:
+
+```yaml
+jobs:
+  deploy:
+    environment:
+      name: preview
+      url: ${{ steps.set-output.outputs.deployment_url }}   # `url` may read the steps context
+```
+
+Placement rules learned here:
+- **Not allowed on a job that calls a reusable workflow.** After `uses:` only `with:` and `secrets:` are permitted, so `environment:` goes *inside* the callee (`deploy-preview.yml`, `promote.yml`), never in the composite caller.
+- **Environment names are case-insensitive** — `preview` resolves to an env named `Preview`, and GitHub refuses to create a case-duplicate. (Case *does* matter via the REST API.)
+- `url:` is one of the few job-level fields that can reference the `steps` context, because GitHub resolves it after the job runs.
+
+### Attach `production` to *promote*, not to the staged deploy
+
+The environment should record **go-live**, not build-time. Putting `production` on the `deploy-prod` job (the `--skip-domain` staged deploy) would mark production as deployed while the domain still serves the previous build — and if smoke then failed and you never promoted, the tab would permanently show a "production deployment" that never served a request.
+
+Its `url:` should be the **stable production domain** (an environment-scoped `vars.PRODUCTION_URL`), not the staged deployment URL: the hash URL is ephemeral and sits behind Deployment Protection, so it's neither what users hit nor even reachable from the tab.
+
+That the URL is static is the point — production's address doesn't change. The varying signal is elsewhere in the record: **commit SHA, timestamp, status**. Smoke fails → promote never runs → no production deployment recorded at all (the previous one still shows, correctly). Promote fails → the record lands red.
+
+### Environment protection rule vs required status check
+
+They gate different objects at different moments and neither substitutes for the other:
+
+| | Required status check | Environment protection rule |
+|---|---|---|
+| Blocks | the **merge button** on a PR | a **job at runtime** (pauses pending approval/timer) |
+| Evaluated | against the PR head commit | when the job is about to start |
+| Protects | the codebase — nothing broken lands | the deployment — nothing goes live unapproved |
+
+A protection rule can't stop a merge; a status check has no say once deployment is running. On `promote`, a rule pauses *after* `migrate deploy` has already run against production and the staged build passed smoke — which is precisely why an already-applied migration must be backward compatible.
+
 ---
 
 ## Pipeline gotchas (hard-won)
