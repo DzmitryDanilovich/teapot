@@ -7,6 +7,12 @@ on:
         description: 'Base URL for the application under test'
         required: false
         type: string
+  workflow_dispatch:
+    inputs:
+      baseURL:
+        description: 'Base URL for the application under test'
+        required: false
+        type: string
 
 jobs:
   promote:

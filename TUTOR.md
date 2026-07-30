@@ -61,8 +61,9 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 
 - Task 21: GitHub Deployments & Environments — native Actions `environment:` key, static `preview` env on PR deploys + `production` env at `promote` go-live, deployment status vs. required status check, Vercel Git integration stays off (`deploymentEnabled: false`)
 
+- Task 22: Branch protection — ruleset on `main` (PR required, 0 approvals, linear history, no force-push), required checks `test`/`e2e`/Sonar/CodeQL, `paths-ignore` removed from PR triggers to avoid the never-reporting-check trap
+
 ### Up next
-- Task 22: Branch protection — required status checks (CI, CodeQL, Sonar), no direct pushes to `main`, PR-only merges
 - Task 23: Dependabot — automated dependency update PRs, grouping, validated by the CI pipeline
 - Task 24: Route Handlers — build a public REST API (`src/app/api/`), understand when to use them vs Server Actions
 - Task 25: TanStack Query — client-side data fetching, polling, optimistic updates; contrast with Server Components
