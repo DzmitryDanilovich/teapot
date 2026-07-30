@@ -1104,7 +1104,7 @@ The single biggest gotcha, and it has no elegant fix:
 Root cause: required checks are **name-based and workflow-unaware**. A ruleset waits for a check name; it can't tell "deliberately skipped" from "still running." There is no "conditionally required" concept. GitHub once documented an inverse-dummy-workflow workaround and *removed it from their docs for being too messy*; the feature request is long-standing and open.
 
 Options, none clean:
-1. **Delete `paths-ignore` from PR triggers.** Everything always runs, every check always reports. Costs free CI minutes; removes the conflict entirely. **This is what this repo does.**
+1. **Delete `paths-ignore` from PR triggers.** Everything always runs, every check always reports. Costs free CI minutes; removes the conflict entirely. **This is what this repo does** — and note the filter is still valid on `push` triggers, where it prevents a pointless production redeploy: required checks gate PR *merges*, so nothing is ever waiting on the post-merge push.
 2. **Move filtering to job level** — a filter job (`dorny/paths-filter`) plus `if:` on expensive jobs; skips cascade through `needs`.
 3. **Don't require the filtered checks** — zero churn, weaker enforcement.
 
