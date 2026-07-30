@@ -1084,6 +1084,48 @@ A protection rule can't stop a merge; a status check has no say once deployment 
 
 ---
 
+## Branch protection — rulesets
+
+Use **rulesets** (Settings → Rules), not classic branch protection — they're the current system and support bypass lists, richer rules, and org-level reuse.
+
+Config that matters on `main`: require a pull request before merging, require status checks, block force pushes, restrict deletions. **Required approvals must be `0` on a solo repo** — GitHub won't let you approve your own PR, so requiring 1 is a permanent self-lock.
+
+Beyond status checks, rulesets can require **code scanning results** natively (pick the tool + severity thresholds). Prefer that over pinning a status check named `CodeQL`: check names are string-matched and break silently when a workflow or job is renamed.
+
+Keep `Require linear history` consistent with the repo's allowed merge methods — linear history plus merge-commits-only is how people brick merging entirely. Squash and rebase both satisfy it.
+
+### The `paths-ignore` × required-checks trap
+
+The single biggest gotcha, and it has no elegant fix:
+
+- **Workflow skipped by `paths-ignore`** → the check is never created → sits at *"Expected — waiting for status to be reported"* → **PR blocked forever.**
+- **Job skipped by an `if:` conditional** → the check *is* created and reports **Success** → doesn't block.
+
+Root cause: required checks are **name-based and workflow-unaware**. A ruleset waits for a check name; it can't tell "deliberately skipped" from "still running." There is no "conditionally required" concept. GitHub once documented an inverse-dummy-workflow workaround and *removed it from their docs for being too messy*; the feature request is long-standing and open.
+
+Options, none clean:
+1. **Delete `paths-ignore` from PR triggers.** Everything always runs, every check always reports. Costs free CI minutes; removes the conflict entirely. **This is what this repo does.**
+2. **Move filtering to job level** — a filter job (`dorny/paths-filter`) plus `if:` on expensive jobs; skips cascade through `needs`.
+3. **Don't require the filtered checks** — zero churn, weaker enforcement.
+
+**Critical limit on option 2:** "skipped → success" only applies to **GitHub Actions** checks. Checks posted by external apps (e.g. `SonarCloud Code Analysis`) simply never appear if their job is skipped — so gating a Sonar job re-creates the block. Same for CodeQL gating through the code-scanning rule, which needs actual results for the head commit.
+
+### Composite ≠ aggregator
+
+A workflow that calls reusable workflows is an **orchestrator** — it sequences jobs, but each job still emits its own check (hence names like `test / test` = caller job / callee job). It does *not* collapse results into one check.
+
+An **aggregator** job does: `needs:` everything, `if: always()`, and explicitly inspects `needs.*.result`. That buys one stable required check name (rename-proof) and honest handling of skipped dependencies. The footgun: with `if: always()` the job runs even when its dependencies failed, so without evaluating `needs.*.result` it reports green over a red pipeline. It does **not** solve path filtering — if the workflow never triggers, the aggregator never runs either.
+
+### Requiring deploy-dependent checks
+
+Requiring `e2e` couples your ability to merge to third-party uptime — a Vercel or Neon outage blocks every merge, including fixes unrelated to either. `test` depends only on the runner. Stricter posture is defensible (a green e2e means the environment is genuinely deployable); just make it a deliberate choice.
+
+### Admin bypass
+
+Bypass isn't silent for PR merges — checks still run and display, and merging anyway is a visible, deliberate override. It *is* silent for direct pushes. The real cost isn't invisibility, it's friction removal: a broken required-check config becomes a two-second click-through instead of something you're forced to fix.
+
+---
+
 ## Pipeline gotchas (hard-won)
 
 Everything below cost a red run to learn. Symptom → cause → fix.

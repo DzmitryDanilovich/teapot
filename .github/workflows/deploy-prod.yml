@@ -5,6 +5,7 @@ on:
       deployment_url:
         description: 'The URL of the production deployment'
         value: ${{ jobs.deploy.outputs.deployment_url }}
+  workflow_dispatch:
 
 jobs:
   deploy:

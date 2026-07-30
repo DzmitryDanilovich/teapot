@@ -3,9 +3,6 @@ name: Composite Main
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - .github/**/*
 
 jobs:
   test:

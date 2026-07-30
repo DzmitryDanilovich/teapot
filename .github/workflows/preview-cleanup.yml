@@ -1,7 +1,9 @@
 name: Cleanup preview DB
+
 on: 
   pull_request:
     types: [closed]
+
 jobs:
   delete-neon-branch:
     permissions:
