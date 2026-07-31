@@ -22,7 +22,7 @@
     "@prisma/client-runtime-utils": "7.8.0",
     "@tabler/icons-react": "^3.44.0",
     "@types/pg": "^8.20.0",
-    "better-auth": "^1.6.10",
+    "better-auth": "^1.6.22",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.3.0",
