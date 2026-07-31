@@ -62,15 +62,13 @@ These steps are **mandatory** on every approval — not optional, not deferred.
 - Task 21: GitHub Deployments & Environments — native Actions `environment:` key, static `preview` env on PR deploys + `production` env at `promote` go-live, deployment status vs. required status check, Vercel Git integration stays off (`deploymentEnabled: false`)
 
 - Task 22: Branch protection — ruleset on `main` (PR required, 0 approvals, linear history, no force-push), required checks `test`/`e2e`/Sonar/CodeQL, `paths-ignore` removed from PR triggers to avoid the never-reporting-check trap
+- Task 23: Dependabot — grouped npm + github-actions update PRs with `cooldown`, all actions SHA-pinned via `pinact`, Dependabot's restricted secret context resolved via the Dependabot secrets store
 
 ### Up next
 
 Every task below ships a real feature. The Next.js concept it teaches is named after the em dash — but the deliverable is app evolution, not an exercise. Together they take Teapot from a working CRUD demo to something that behaves like a product.
 
 **Ordering principle: adopt cross-cutting concerns before writing the code they cut across.** Anything that touches every future file — i18n, the form library, route structure, error boundaries, accessibility — comes first, so it is never retrofitted across a grown codebase. Only genuinely feature-dependent topics (caching, SEO, streaming, PPR) wait for the feature that gives them meaning.
-
-**Phase 0 — finish the security thread**
-- Task 23: Dependabot — automated dependency update PRs, grouping, SHA-pinned actions (`pinact`), Dependabot's restricted secret context vs. required checks
 
 **Phase 1 — foundations, adopted before any more code is written**
 - Task 24: i18n — `next-intl`, extract every existing string; from here on no hardcoded copy is added anywhere
