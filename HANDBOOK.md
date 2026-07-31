@@ -1126,6 +1126,42 @@ Bypass isn't silent for PR merges — checks still run and display, and merging 
 
 ---
 
+## Dependency automation — Dependabot + SHA pinning
+
+### Dependabot runs in a restricted security context
+
+A Dependabot-triggered workflow run is **not** like a PR you open yourself:
+
+- `GITHUB_TOKEN` is **read-only**
+- **Actions secrets are unavailable** — it reads from a separate **Dependabot secrets** store
+
+Why: a Dependabot PR *contains untrusted third-party code*. Running `pnpm install` on it executes that package's install scripts. With a writable token and full secrets, a malicious version could exfiltrate everything and push to the repo. The restriction caps blast radius.
+
+The consequence with required checks: jobs needing `VERCEL_TOKEN` / `NEON_API_KEY` / `SONAR_TOKEN` get empty values, so `deploy-preview` fails, `e2e` never runs, `sonar` fails — three required checks dead, every Dependabot PR unmergeable. Two resolutions:
+
+1. **Populate the Dependabot secrets store** — full CI on updates, but those credentials are now reachable from a context that runs untrusted dependency code. Note that copying the *same* token there doesn't make it "separate"; isolation is about which contexts can read secrets, not differing values. Genuine separation means minting distinct, narrowly-scoped tokens.
+2. **Exclude deploy-dependent jobs** (`if: github.actor != 'dependabot[bot]'`) and don't require them — keeps secrets out of that context, at the cost of less validation.
+
+### Config
+
+`.github/dependabot.yml`, two ecosystems: `npm` (handles pnpm) and `github-actions`. Use `groups:` to batch related packages (react, testing-library, vitest) or a lockfile bump becomes one PR per package. `cooldown:` delays updates so freshly-published versions age before you adopt them. Beware `ignore:` on whole update types — patch releases are frequently where security fixes ship; verify security updates still reach you.
+
+### Why pin actions to SHAs when Dependabot updates them anyway
+
+They cover **different** holes, and Dependabot cannot cover pinning's:
+
+A tag is a mutable pointer. If a maintainer's account is compromised, `@v7` can be repointed at malicious code and your next run executes it with your secrets — **no new version exists, so Dependabot proposes nothing and you're never notified**. This is the `tj-actions/changed-files` compromise (March 2025): tags repointed across versions, thousands of repos silently leaked secrets into logs.
+
+| | Protects against | Leaves open |
+|---|---|---|
+| SHA pin only | tag repointing (immutable ref) | frozen on known CVEs forever |
+| Dependabot only | staying on vulnerable versions | ground moving under you between updates |
+| Both | — | — |
+
+`pinact` (a **Go** CLI — `brew install pinact`, *not* npm) rewrites every `uses:` to its commit SHA, preserving the tag as a trailing comment (`@a1b2c3… # v7.0.1`). Dependabot then bumps the SHA and comment together, so pins never rot.
+
+---
+
 ## Pipeline gotchas (hard-won)
 
 Everything below cost a red run to learn. Symptom → cause → fix.

@@ -22,19 +22,19 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - name: Checkout repository
-        uses: 'actions/checkout@v7'
+        uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # v7.0.1
       - name: Setup
         uses: ./.github/actions/setup
       - name: Create Neon branch
         id: neon
-        uses: neondatabase/create-branch-action@v6
+        uses: neondatabase/create-branch-action@fb620d43d4c565abaf088b848a4e28e5c4ea4d9c # 6.3.1
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
           branch_name: preview/pr-${{ github.event.pull_request.number }}
           prisma: true
       - name: Reset Neon branch
-        uses: neondatabase/reset-branch-action@v1
+        uses: neondatabase/reset-branch-action@470ab8101095ea33737c294d17364a72fd80761b # v1.3.2
         if: ${{ steps.neon.outputs.created == 'false' }}
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
