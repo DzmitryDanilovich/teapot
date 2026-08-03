@@ -29,3 +29,11 @@ jobs:
     secrets: inherit
     with:
       baseURL: ${{ needs.deploy-preview.outputs.deployment_url }}
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/auto-merge.yml
+    needs: e2e
+    secrets: inherit
