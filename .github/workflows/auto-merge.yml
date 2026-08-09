@@ -23,3 +23,14 @@ jobs:
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    outputs:
+      update-type: ${{ steps.metadata.outputs.update-type }}
+  delete-neon-branch:
+    needs: auto-merge
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]'
+      && needs.auto-merge.outputs.update-type != 'version-update:semver-major'
+    secrets: inherit
+    uses: ./.github/workflows/preview-cleanup.yml
+    permissions:
+      contents: read
