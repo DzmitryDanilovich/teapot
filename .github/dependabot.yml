@@ -4,6 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      code-ql:
+        patterns:
+          - "github/codeql-action/*"
 
   - package-ecosystem: "npm"
     directory: "/"
