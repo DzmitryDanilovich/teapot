@@ -3,6 +3,7 @@ name: Cleanup preview DB
 on: 
   pull_request:
     types: [closed]
+  workflow_call:
 
 jobs:
   delete-neon-branch:
