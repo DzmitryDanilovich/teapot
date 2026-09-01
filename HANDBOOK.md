@@ -1195,10 +1195,11 @@ The header names have no "automation" in them despite the feature/secret being n
 
 ### Better Auth rejects Origin on request-context calls
 
-Playwright's `APIRequestContext` (used in `*.setup.ts` to sign in/up via `/api/auth/*`) sends **no `Origin` header** — it's not a browser. Better Auth's CSRF protection then returns `403`. Two distinct failures:
+Playwright's `APIRequestContext` (used in `*.setup.ts` to sign in/up via `/api/auth/*`) sends **no `Origin` header** — it's not a browser. Better Auth's CSRF protection then returns `403`. Three distinct failures:
 
 - `MISSING_OR_NULL_ORIGIN` — no Origin at all. Fix: pass one from the `baseURL` fixture: `request.post(url, { data, headers: { origin: baseURL } })`. (Only the setup files need this; browser-driven specs reach Better Auth through Server Actions server-side, and the browser sends a real Origin anyway.)
 - `INVALID_ORIGIN` — Origin present but untrusted. Happens on prod because `baseURL` is pinned to the stable production domain (from `BETTER_AUTH_URL`) while the smoke hits the *deployment* URL. Fix: trust the deployment's own URL — `trustedOrigins: process.env.VERCEL_URL ? ['https://' + process.env.VERCEL_URL] : []`.
+- `INVALID_ORIGIN` **locally** — same error, different cause. `.env` pins `BETTER_AUTH_URL=http://localhost:3000` while the e2e server runs on `3001` (`.env.e2e` overrides `PORT` but nothing else), and Better Auth derives its trusted list from `baseURL`. Fix: add `BETTER_AUTH_URL=http://localhost:3001` to `.env.e2e` — Next's env load order puts `process.env` ahead of `.env` files, and the Playwright `webServer` child inherits it. This is latent config drift, not an i18n regression; it surfaces as a total e2e failure at the auth-seed step.
 
 Don't "fix" `INVALID_ORIGIN` by dropping `BETTER_AUTH_URL` so `baseURL` floats to `VERCEL_URL` — that breaks real production, because `VERCEL_URL` is the ephemeral per-deploy hash URL, not the stable domain real users and OAuth callbacks use.
 
@@ -1275,6 +1276,130 @@ Sonar reads an `lcov` file **your CI produces** (`sonar.javascript.lcov.reportPa
 ### Clean as You Code (default Quality Gate)
 
 Sonar's default gate evaluates **new/changed code only**, not the whole codebase. The failure mode it avoids: gating on *total* coverage % on an existing project sitting at, say, 40% would block **every** PR until someone back-fills tests for untouched code — so teams just disable the gate. Gating on new code means each PR only cleans up what it changed, and the codebase ratchets upward organically without ever blocking delivery. It's what makes a quality gate survivable on a real, imperfect codebase.
+
+---
+
+## Internationalization — `next-intl`
+
+### Routing strategy
+
+`defineRouting({ locales, defaultLocale, localePrefix: 'as-needed' })`. Three options exist — prefix (`/pl/teas`), domain (`example.pl`), and cookie/header negotiation with no prefix. `as-needed` is the middle path: the default locale stays unprefixed (`/teas`), every other locale gets one (`/pl/teas`).
+
+The decision is **not** cosmetic and is expensive to reverse:
+- **Prefixed locales make locale a route param.** Every route moves under `src/app/[locale]/`, and locale enters `generateStaticParams` as a Cartesian product — N teas × 4 locales = 4N prerendered pages. Build time and output size multiply by locale count.
+- **Cookie-only negotiation** keeps locale out of the URL and out of the static-params product, but gives up shareable and indexable per-locale links. Search engines index one URL per page, not one per language.
+
+### `useTranslations` vs `getTranslations` — the sharp edge
+
+| | `useTranslations` | `getTranslations` |
+|---|---|---|
+| Kind | hook (sync) | async function |
+| Client Components | ✅ | ❌ |
+| **Sync** Server Components | ✅ | ✅ |
+| **Async** Server Components | ❌ **crashes** | ✅ |
+| Server Actions | ❌ | ✅ |
+
+`useTranslations` internally uses React's `use()`, which requires a synchronous render dispatcher. Call it in an *async* Server Component and you get **"Expected a suspended thenable. This is a bug in React."** — an error that names neither the file nor next-intl.
+
+**Neither `tsc` nor `eslint-plugin-react-hooks` catches this.** The rule to internalize: the moment a Server Component becomes `async`, its translation calls must become `await getTranslations()`.
+
+### Composing locale negotiation with auth in `proxy.ts`
+
+Two concerns, one proxy, and order matters. Run **i18n first and keep its response**:
+
+```ts
+const response = i18nProxy(request);          // negotiates locale, sets headers + cookie
+if (isProtectedPath(request.nextUrl.pathname)) {
+    return await authProxy(request, response); // may redirect, using the negotiated locale
+}
+return response;
+```
+
+What breaks if auth goes first: it decides to redirect and builds `/login` before any locale exists, so a Polish user lands on the English login page. And because both layers produce a `NextResponse`, one clobbers the other — you lose either the auth redirect or i18n's locale headers and cookie.
+
+The mechanism that makes the composition work: **`i18nProxy`'s response carries the negotiated locale in the `x-next-intl-locale` header.** The auth layer reads it to build a locale-correct target (`/pl/login`) and otherwise returns the i18n response untouched.
+
+### Navigation must go through the wrappers
+
+`createNavigation(routing)` returns locale-aware `Link`, `useRouter`, `usePathname`, `redirect`, `getPathname`. Import these from `@/i18n/navigation`, **never** from `next/link` or `next/navigation` — the raw versions don't know about the prefix and will strip the locale.
+
+Two consequences that bite:
+- **`redirect` is async in the wrapper** (it needs `getLocale()`). `await redirect(...)` does **not** narrow to `never` — TypeScript's control-flow analysis doesn't propagate never-ness through `await`. Every call site must be `return redirect(...)` or the code after it is treated as reachable.
+- **`useRouter` is the first thing in the app that asserts `AppRouterContext`.** `next/link` reads the same context but tolerates `null`; `useRouter()` throws `invariant expected app router to be mounted`. Adding a single language selector is what forced router mocking into the unit tests.
+
+### Type-safe keys — and precisely what they cover
+
+```ts
+// next.config.ts
+createNextIntlPlugin({ experimental: { createMessagesDeclaration: './messages/en.json' } })
+// global.ts
+declare module 'next-intl' {
+    interface AppConfig { Locale: ...; Messages: typeof messages }
+}
+```
+
+This generates `messages/en.d.json.ts` with **literal** string types (not `string`) — deliberately, because next-intl parses ICU arguments out of the message *text*, so `{provider}` in `"Log in with {provider}"` is only visible to the type system while the value stays a literal.
+
+What it does and does not do:
+- ✅ Validates **call sites** against `en.json` — a typo'd key is a `tsc` error.
+- ❌ Says nothing about `pl.json`/`be.json`/`ru.json`. They're loaded via ``await import(`../../messages/${locale}.json`)`` — a dynamic import with a template literal, which TypeScript cannot resolve or check.
+- ⚠️ The declaration is gitignored and only generated by a build. CI runs `typecheck` with no build, so **ICU argument checking is not active in CI** — only key-name checking.
+
+### Message-file parity via `satisfies`
+
+Missing keys in a non-default locale are a **runtime** failure: `use-intl`'s `defaultGetMessageFallback` returns `joinPath(namespace, key)`, so the user literally sees `Theme.toggleTheme` on the page. There is **no automatic fallback to the default locale.**
+
+The cheapest gate rides `tsc`:
+
+```ts
+type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };
+
+pl satisfies Widen<typeof en>;   // missing keys
+en satisfies Widen<typeof pl>;   // extra keys
+```
+
+Three things to know:
+- **`Widen` is required.** Without it, `typeof en` is the generated *literal* types, and `string` isn't assignable to `"Toggle Theme"`.
+- **Both directions are required.** Excess-property checking only fires on fresh object literals, never on a variable or import — so one direction alone cannot see extra keys. Mutual assignability is what structural equality means here.
+- Don't reach for `Equals<X, Y>` or a mutually-constrained helper. The latter fails with `TS2313: circular constraint`; the former reports only `Type 'false' does not satisfy the constraint 'true'` and never names the offending key. Plain `satisfies` names it.
+
+**What it can't prove:** the key set is not the contract. Identical keys with an empty value, untranslated English, or a *dropped ICU placeholder* all pass. `"Hasło musi mieć co najmniej znaków"` typechecks fine and silently discards `{minLength}` at runtime.
+
+**And the deeper limitation:** this is peer comparison, not validation — `en.json` is doing double duty as both the English translation and the schema. It can tell you two files disagree, never which one is wrong. A real source of truth is what a TMS (Lokalise, Crowdin, Phrase) provides: keys defined once, translations hanging off them, parity structural rather than asserted. Industry solves this at the *platform* layer or with build-time tooling (`@formatjs/cli`, `eslint-plugin-formatjs`, `i18next-parser`) — never inside the runtime i18n library, which ships to the browser and can't depend on `fs`.
+
+### What actually reaches the browser
+
+`NextIntlClientProvider` rendered from a Server Component **auto-inherits everything** — locale, formats, timeZone, now, and messages:
+
+```js
+messages: messages === undefined ? await getMessages() : messages
+```
+
+So `<NextIntlClientProvider>` and `<NextIntlClientProvider messages={await getMessages()}>` are identical. Passing it explicitly is redundant.
+
+The payload nuance most people get backwards: **locale count does not affect client payload.** Only the active locale is ever serialized — a Polish user never receives English. What grows the payload is *message volume*. In Teapot, `LogInActions` is 40% of `en.json` and is used exclusively by Server Actions, yet ships to every browser on every page.
+
+The scalable fix is **not** slicing namespaces at the root — do that and a component reaching for an omitted namespace still typechecks (the augmentation describes the whole file, not what you handed the provider) and fails at runtime. The fix is to **translate on the server and pass rendered strings as props**, so the client boundary receives text rather than translation machinery. It doesn't work for components that select keys dynamically at runtime (e.g. `itemToStringLabel={(item) => tTeaType(item)}`), which genuinely need messages client-side.
+
+If a real fallback chain is wanted, **deep-merge** English under the active locale in `request.ts` — and note a shallow `{...en, ...pl}` is wrong, because it replaces whole top-level namespaces and discards English's entire namespace when the translated one is merely incomplete. Adding a fallback makes the parity gate *more* load-bearing, not less: it removes the loud runtime signal.
+
+### Translating validation and auth errors
+
+- **Zod messages** live outside components, so they can't call a hook. Convert module-level schemas into **schema factories** taking `t`, and build the schema inside the action where `await getTranslations()` is available.
+- **Better Auth** owns its own error strings. `@better-auth/i18n` translates them via `error.code` against a locale table. Belarusian isn't among its built-in locales, so those strings are supplied by hand. Wire `localeCookie: 'NEXT_LOCALE'` so it reads the same cookie next-intl sets, and keep `nextCookies()` last in the plugin array.
+
+### Testing under i18n
+
+- **Component tests** need a wrapper supplying `NextIntlClientProvider` with the real English messages. Using real messages (rather than an identity stub) keeps accessible queries asserting on the copy a user actually sees.
+- **Server Action tests** render nothing, and the thing under test is the error *key* — mock `next-intl/server` with an identity translator. Also mock `next/headers`, which has no request scope under Vitest and otherwise throws inside a catch block, surfacing as a confusing assertion diff rather than an error.
+- **`vi.mock` factories are hoisted** above imports. Referencing a top-level import inside one gives `Cannot access '__vi_import_1__' before initialization`. Use an async factory with `importOriginal`, or `vi.hoisted`.
+- **E2E asserts on copy**, so extracting strings silently breaks selectors. Renaming placeholders from `"Tea Name"` to `"Name"` broke three page objects — a class of drift the parity gate cannot catch, because it checks keys and not whether the value still matches what a test expects.
+
+### Accessibility notes surfaced by this task
+
+- **`lucide-react` sets `aria-hidden="true"` on its SVGs.** An icon-only button therefore has an *empty* accessible name — unreachable by `getByRole('button', { name })` and announced as just "button". Give it `aria-label` (or an `sr-only` span, which is visually hidden, not visible text). A `<title>` inside the SVG won't work: `aria-hidden` removes the whole subtree.
+- **Keep such a label static.** A label that changes with state ("Switch to dark" → "Switch to light") breaks the test locator after the click. Express state with `aria-pressed` instead, which also gives a cleaner assertion than inspecting the `<html>` class.
+- **`next-themes`: `theme` vs `resolvedTheme`.** `theme` is the user's *selection* and is `'system'` by default; `resolvedTheme` is what's actually rendered. Toggling on `theme` makes the first click a no-op (`'system' !== 'light'` → sets `'light'`, which was already showing). Toggle logic must read `resolvedTheme`.
 
 ---
 

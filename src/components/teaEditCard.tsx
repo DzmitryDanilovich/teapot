@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 
 import type { Errors } from '@/common/errorCollector';
@@ -33,6 +34,10 @@ interface Props {
 }
 
 const TeaEditCard = ({ title, initialState, action }: Props) => {
+    const tTea = useTranslations('Tea');
+    const tTeaType = useTranslations('TeaType');
+    const tCommon = useTranslations('Common');
+
     const [state, formAction, isPending] = useActionState(action, initialState);
     const [type, setType] = useState<TeaType | null>(
         state?.values.type || null,
@@ -56,7 +61,7 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                                 type='text'
                                 name='name'
                                 defaultValue={state?.values?.name}
-                                placeholder='Tea Name'
+                                placeholder={tTea('name')}
                             />
                             <FieldError
                                 errors={state?.errors?.name?.map((e) => ({
@@ -70,13 +75,16 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                                 items={Object.values(TeaType)}
                                 value={type}
                                 onValueChange={setType}
+                                itemToStringLabel={(item) =>
+                                    item && tTeaType(item)
+                                }
                                 required
                             >
-                                <ComboboxInput placeholder='Tea Type' />
+                                <ComboboxInput placeholder={tTea('type')} />
                                 <ComboboxContent>
                                     {Object.values(TeaType).map((tea) => (
                                         <ComboboxItem key={tea} value={tea}>
-                                            {tea}
+                                            {tTeaType(tea)}
                                         </ComboboxItem>
                                     ))}
                                 </ComboboxContent>
@@ -92,7 +100,7 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                                 type='text'
                                 name='origin'
                                 defaultValue={state?.values?.origin || ''}
-                                placeholder='Tea Origin'
+                                placeholder={tTea('origin')}
                             />
                             <FieldError
                                 errors={state?.errors?.origin?.map((e) => ({
@@ -105,7 +113,7 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                                 type='text'
                                 name='storeUrl'
                                 defaultValue={state?.values?.storeUrl || ''}
-                                placeholder='Store URL'
+                                placeholder={tTea('storeUrl')}
                             />
                             <FieldError
                                 errors={state?.errors?.storeUrl?.map((e) => ({
@@ -118,7 +126,7 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
             </CardContent>
             <CardFooter>
                 <Button disabled={isPending} type='submit' form='logTeaForm'>
-                    Save
+                    {tCommon('save')}
                 </Button>
             </CardFooter>
         </Card>

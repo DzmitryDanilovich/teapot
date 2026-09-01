@@ -1,0 +1,67 @@
+{
+    "Language": {
+        "language": "Мова",
+        "selectLanguage": "Выберыце мову"
+    },
+    "Theme": {
+        "toggleTheme": "Пераключыць тэму"
+    },
+    "HomePage": {
+        "goToTeas": "Перайсці да чаяў",
+        "log": "Дадаць запіс"
+    },
+    "LogIn": {
+        "logIn": "Увайсці",
+        "signUp": "Зарэгістравацца",
+        "logOut": "Выйсці",
+        "name": "Імя",
+        "email": "Электронная пошта",
+        "password": "Пароль",
+        "logInWith": "Увайсці праз {provider}",
+        "errorDuringLoginWith": "Адбылася памылка падчас уваходу праз {provider}"
+    },
+    "LogInActions": {
+        "invalidEmailAddress": "Няправільны адрас электроннай пошты",
+        "passwordIsRequired": "Патрабуецца пароль",
+        "logInError": "Адбылася памылка падчас уваходу ў сістэму.",
+        "signUpError": "Адбылася памылка падчас рэгістрацыі.",
+        "nameIsRequired": "Патрабуецца імя",
+        "passwordLengthError": "Пароль павінен быць не менш за {minLength} сімвалаў",
+        "passwordMustContainUppercase": "Пароль павінен утрымліваць хаця б адну вялікую літару",
+        "passwordMustContainLowercase": "Пароль павінен утрымліваць хаця б адну малую літару",
+        "passwordMustContainNumber": "Пароль павінен утрымліваць хаця б адну лічбу",
+        "passwordMustContainSpecialCharacter": "Пароль павінен утрымліваць хаця б адзін спецыяльны сімвал"
+    },
+    "LogPage": {
+        "logTea": "Дадаць чай"
+    },
+    "TeasPage": {
+        "teasCollection": "Калекцыя чаяў",
+        "viewDetails": "Паглядзець падрабязнасці",
+        "editTea": "Рэдагаваць чай"
+    },
+    "Tea": {
+        "name": "Назва",
+        "type": "Тып",
+        "origin": "Паходжанне",
+        "storeUrl": "URL крамы",
+        "loggedDate": "Дата дадання"
+    },
+    "TeaType": {
+        "black": "Чорны",
+        "green": "Зялёны",
+        "oolong": "Улун",
+        "white": "Белы",
+        "puerh": "Пуэр"
+    },
+    "EditTeaAction": {
+        "nameIsRequired": "Назва абавязковая",
+        "validTypeIsRequired": "Патрэбны правільны тып",
+        "storeUrlMustBeValid": "URL крамы павінен быць сапраўдным URL"
+    },
+    "Common": {
+        "edit": "Рэдагаваць",
+        "delete": "Выдаліць",
+        "save": "Захаваць"
+    }
+}

@@ -1,0 +1,67 @@
+{
+    "Language": {
+        "language": "Język",
+        "selectLanguage": "Wybierz język"
+    },
+    "Theme": {
+        "toggleTheme": "Przełącz motyw"
+    },
+    "HomePage": {
+        "goToTeas": "Przejdź do herbat",
+        "log": "Dodaj wpis"
+    },
+    "LogIn": {
+        "logIn": "Zaloguj się",
+        "signUp": "Zarejestruj się",
+        "logOut": "Wyloguj się",
+        "name": "Imię",
+        "email": "Email",
+        "password": "Hasło",
+        "logInWith": "Zaloguj się przez {provider}",
+        "errorDuringLoginWith": "Wystąpił błąd podczas logowania przez {provider}"
+    },
+    "LogInActions": {
+        "invalidEmailAddress": "Nieprawidłowy adres email",
+        "passwordIsRequired": "Hasło jest wymagane",
+        "logInError": "Wystąpił błąd podczas logowania.",
+        "signUpError": "Wystąpił błąd podczas rejestracji.",
+        "nameIsRequired": "Imię jest wymagane",
+        "passwordLengthError": "Hasło musi mieć co najmniej {minLength} znaków",
+        "passwordMustContainUppercase": "Hasło musi zawierać co najmniej jedną wielką literę",
+        "passwordMustContainLowercase": "Hasło musi zawierać co najmniej jedną małą literę",
+        "passwordMustContainNumber": "Hasło musi zawierać co najmniej jedną cyfrę",
+        "passwordMustContainSpecialCharacter": "Hasło musi zawierać co najmniej jeden znak specjalny"
+    },
+    "LogPage": {
+        "logTea": "Dodaj herbatę"
+    },
+    "TeasPage": {
+        "teasCollection": "Kolekcja herbat",
+        "viewDetails": "Zobacz szczegóły",
+        "editTea": "Edytuj herbatę"
+    },
+    "Tea": {
+        "name": "Nazwa",
+        "type": "Rodzaj",
+        "origin": "Pochodzenie",
+        "storeUrl": "URL sklepu",
+        "loggedDate": "Data dodania"
+    },
+    "TeaType": {
+        "black": "Czarna",
+        "green": "Zielona",
+        "oolong": "Oolong",
+        "white": "Biała",
+        "puerh": "Pu-erh"
+    },
+    "EditTeaAction": {
+        "nameIsRequired": "Nazwa jest wymagana",
+        "validTypeIsRequired": "Rodzaj jest wymagany",
+        "storeUrlMustBeValid": "URL sklepu musi być prawidłowym adresem URL"
+    },
+    "Common": {
+        "edit": "Edytuj",
+        "delete": "Usuń",
+        "save": "Zapisz"
+    }
+}
