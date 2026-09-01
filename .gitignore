@@ -57,3 +57,5 @@ node_modules/
 
 # claude
 .claude/
+
+messages/*.d.json.ts

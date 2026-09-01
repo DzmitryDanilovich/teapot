@@ -1,0 +1,67 @@
+{
+    "Language": {
+        "language": "Language",
+        "selectLanguage": "Select Language"
+    },
+    "Theme": {
+        "toggleTheme": "Toggle Theme"
+    },
+    "HomePage": {
+        "goToTeas": "Go to Teas",
+        "log": "Log"
+    },
+    "LogIn": {
+        "logIn": "Log In",
+        "signUp": "Sign Up",
+        "logOut": "Log Out",
+        "name": "Name",
+        "email": "Email",
+        "password": "Password",
+        "logInWith": "Log in with {provider}",
+        "errorDuringLoginWith": "An error occurred during {provider} login"
+    },
+    "LogInActions": {
+        "invalidEmailAddress": "Invalid email address",
+        "passwordIsRequired": "Password is required",
+        "logInError": "An error occurred during login.",
+        "signUpError": "An error occurred during sign up.",
+        "nameIsRequired": "Name is required",
+        "passwordLengthError": "Password must be at least {minLength} characters long",
+        "passwordMustContainUppercase": "Password must contain at least one uppercase letter",
+        "passwordMustContainLowercase": "Password must contain at least one lowercase letter",
+        "passwordMustContainNumber": "Password must contain at least one number",
+        "passwordMustContainSpecialCharacter": "Password must contain at least one special character"
+    },
+    "LogPage": {
+        "logTea": "Log Tea"
+    },
+    "TeasPage": {
+        "teasCollection": "Teas Collection",
+        "viewDetails": "View Details",
+        "editTea": "Edit Tea"
+    },
+    "Tea": {
+        "name": "Name",
+        "type": "Type",
+        "origin": "Origin",
+        "storeUrl": "Store URL",
+        "loggedDate": "Logged Date"
+    },
+    "TeaType": {
+        "black": "Black",
+        "green": "Green",
+        "oolong": "Oolong",
+        "white": "White",
+        "puerh": "Pu-erh"
+    },
+    "EditTeaAction": {
+        "nameIsRequired": "Name is required",
+        "validTypeIsRequired": "Valid type is required",
+        "storeUrlMustBeValid": "Store URL must be a valid URL"
+    },
+    "Common": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save"
+    }
+}

@@ -32,5 +32,11 @@ export default defineConfig({
                 'src/components/theme-provider.tsx',
             ],
         },
+
+        server: {
+            deps: {
+                inline: ['next-intl'],
+            },
+        },
     },
 });

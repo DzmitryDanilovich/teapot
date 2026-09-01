@@ -22,6 +22,10 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
+      better-auth:
+        patterns:
+          - "better-auth"
+          - "@better-auth/*"
       testing-library:
         patterns:
           - "@testing-library/*"

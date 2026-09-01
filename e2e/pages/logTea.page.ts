@@ -10,9 +10,9 @@ class LogTeaPage {
     readonly saveButton;
 
     constructor(private readonly page: Page) {
-        this.teaNameInput = page.getByPlaceholder('Tea Name');
-        this.teaTypeSelect = page.getByPlaceholder('Tea Type');
-        this.teaOriginInput = page.getByPlaceholder('Tea Origin');
+        this.teaNameInput = page.getByPlaceholder('Name');
+        this.teaTypeSelect = page.getByPlaceholder('Type');
+        this.teaOriginInput = page.getByPlaceholder('Origin');
         this.storeUrlInput = page.getByPlaceholder('Store URL');
         this.saveButton = page.getByRole('button', { name: 'Save' });
     }

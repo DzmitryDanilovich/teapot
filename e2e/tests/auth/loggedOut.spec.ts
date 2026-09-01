@@ -44,18 +44,14 @@ test(
     },
 );
 
-test(
-    'cannot access log page when logged out',
-    { tag: '@smoke' },
-    async ({ page }) => {
-        await page.goto('/log');
+test('access log page when logged out', { tag: '@smoke' }, async ({ page }) => {
+    await page.goto('/pl/log');
 
-        await expect(page).toHaveURL('/login');
-    },
-);
+    await expect(page).toHaveURL('/pl/login');
+});
 
 test(
-    'cannot access teas page when logged out',
+    'access teas page when logged out',
     { tag: '@smoke' },
     async ({ page }) => {
         await page.goto('/teas');
