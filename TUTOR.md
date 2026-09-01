@@ -71,7 +71,7 @@ Every task below ships a real feature. The Next.js concept it teaches is named a
 **Ordering principle: adopt cross-cutting concerns before writing the code they cut across.** Anything that touches every future file — i18n, the form library, route structure, error boundaries, accessibility — comes first, so it is never retrofitted across a grown codebase. Only genuinely feature-dependent topics (caching, SEO, streaming, PPR) wait for the feature that gives them meaning.
 
 **Phase 1 — foundations, adopted before any more code is written**
-- Task 24: i18n — `next-intl`, extract every existing string; from here on no hardcoded copy is added anywhere
+- Task 24: i18n — `next-intl`, extract every existing string, plus a CI gate asserting every locale file has the same key set as `en.json`; from here on no hardcoded copy is added anywhere
 - Task 25: Forms, decided once — spike React Hook Form *and* Conform on a real form, compare, commit to one, refactor the existing three; every later form uses the chosen approach
 - Task 26: App structure & error handling — route groups (`(marketing)` vs `(app)`), segment-level `error.tsx`, `global-error.tsx`, `not-found.tsx`; cheap to establish now with 7 routes, expensive to retrofit across 30
 - Task 27: Accessibility baseline — `eslint-plugin-jsx-a11y`, `axe` assertions in Playwright, focus/keyboard conventions to build against rather than remediate

@@ -1,0 +1,67 @@
+{
+    "Language": {
+        "language": "Язык",
+        "selectLanguage": "Выберите язык"
+    },
+    "Theme": {
+        "toggleTheme": "Переключить тему"
+    },
+    "HomePage": {
+        "goToTeas": "Перейти к чаям",
+        "log": "Добавить запись"
+    },
+    "LogIn": {
+        "logIn": "Войти",
+        "signUp": "Зарегистрироваться",
+        "logOut": "Выйти",
+        "name": "Имя",
+        "email": "Электронная почта",
+        "password": "Пароль",
+        "logInWith": "Войти через {provider}",
+        "errorDuringLoginWith": "Произошла ошибка при входе через {provider}"
+    },
+    "LogInActions": {
+        "invalidEmailAddress": "Неверный адрес электронной почты",
+        "passwordIsRequired": "Требуется пароль",
+        "logInError": "Произошла ошибка при входе в систему.",
+        "signUpError": "Произошла ошибка при регистрации.",
+        "nameIsRequired": "Требуется имя",
+        "passwordLengthError": "Пароль должен быть не менее {minLength} символов",
+        "passwordMustContainUppercase": "Пароль должен содержать как минимум одну заглавную букву",
+        "passwordMustContainLowercase": "Пароль должен содержать как минимум одну строчную букву",
+        "passwordMustContainNumber": "Пароль должен содержать как минимум одну цифру",
+        "passwordMustContainSpecialCharacter": "Пароль должен содержать как минимум один специальный символ"
+    },
+    "LogPage": {
+        "logTea": "Добавить чай"
+    },
+    "TeasPage": {
+        "teasCollection": "Коллекция чаев",
+        "viewDetails": "Посмотреть детали",
+        "editTea": "Редактировать чай"
+    },
+    "Tea": {
+        "name": "Название",
+        "type": "Тип",
+        "origin": "Происхождение",
+        "storeUrl": "URL магазина",
+        "loggedDate": "Дата добавления"
+    },
+    "TeaType": {
+        "black": "Черный",
+        "green": "Зеленый",
+        "oolong": "Улун",
+        "white": "Белый",
+        "puerh": "Пуэр"
+    },
+    "EditTeaAction": {
+        "nameIsRequired": "Название обязательно",
+        "validTypeIsRequired": "Тип обязателен",
+        "storeUrlMustBeValid": "URL магазина должен быть действительным URL"
+    },
+    "Common": {
+        "edit": "Редактировать",
+        "delete": "Удалить",
+        "save": "Сохранить"
+    }
+}

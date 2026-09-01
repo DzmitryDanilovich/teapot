@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { TeaType } from '@/generated/prisma/browser';
+import i18nProvider from '@test/i18nProvider';
 import { getStubTea } from '@test/tea';
 
 import TeaEditCard from './teaEditCard';
@@ -18,12 +18,13 @@ describe('TeaEditCard', () => {
                 initialState={{ values: tea, errors: {} }}
                 action={vi.fn()}
             />,
+            { wrapper: i18nProvider },
         );
 
         // assert
         expect(screen.getByText('Test Title')).toBeInTheDocument();
         expect(screen.getByDisplayValue(tea.name)).toBeInTheDocument();
-        expect(screen.getByRole('combobox')).toHaveValue(tea.type);
+        expect(screen.getByRole('combobox')).toHaveValue('Green');
         expect(screen.getByDisplayValue(tea.origin!)).toBeInTheDocument();
         expect(screen.getByDisplayValue(tea.storeUrl!)).toBeInTheDocument();
         expect(
@@ -39,12 +40,13 @@ describe('TeaEditCard', () => {
                 initialState={{ values: {}, errors: {} }}
                 action={vi.fn()}
             />,
+            { wrapper: i18nProvider },
         );
 
         // assert
-        expect(screen.getByPlaceholderText('Tea Name')).toHaveValue('');
+        expect(screen.getByPlaceholderText('Name')).toHaveValue('');
         expect(screen.getByRole('combobox')).toHaveValue('');
-        expect(screen.getByPlaceholderText('Tea Origin')).toHaveValue('');
+        expect(screen.getByPlaceholderText('Origin')).toHaveValue('');
         expect(screen.getByPlaceholderText('Store URL')).toHaveValue('');
     });
 
@@ -82,6 +84,7 @@ describe('TeaEditCard', () => {
                     initialState={{ values: tea, errors: {} }}
                     action={onAction}
                 />,
+                { wrapper: i18nProvider },
             );
 
             // act
@@ -107,6 +110,7 @@ describe('TeaEditCard', () => {
                 initialState={{ values: tea, errors: {} }}
                 action={onAction}
             />,
+            { wrapper: i18nProvider },
         );
 
         // act
@@ -125,16 +129,17 @@ describe('TeaEditCard', () => {
                 initialState={{ values: tea, errors: {} }}
                 action={vi.fn()}
             />,
+            { wrapper: i18nProvider },
         );
 
         // act — open the combobox popup, then click the option
         const typeCombobox = screen.getByRole('combobox');
         await userEvent.click(typeCombobox);
         await userEvent.click(
-            await screen.findByRole('option', { name: TeaType.black }),
+            await screen.findByRole('option', { name: 'Black' }),
         );
 
         // assert
-        expect(typeCombobox).toHaveValue(TeaType.black);
+        expect(typeCombobox).toHaveValue('Black');
     });
 });
