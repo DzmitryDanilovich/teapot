@@ -27,9 +27,9 @@ class TeaPage {
         this.deleteButton = page.getByRole('button', { name: 'Delete' });
         this.saveButton = page.getByRole('button', { name: 'Save' });
 
-        this.nameInput = page.getByPlaceholder('Tea Name');
-        this.typeSelect = page.getByPlaceholder('Tea Type');
-        this.originInput = page.getByPlaceholder('Tea Origin');
+        this.nameInput = page.getByPlaceholder('Name');
+        this.typeSelect = page.getByPlaceholder('Type');
+        this.originInput = page.getByPlaceholder('Origin');
         this.storeUrlInput = page.getByPlaceholder('Store URL');
     }
 
