@@ -22,6 +22,7 @@ interface Props {
 
 const ShowTeaCard = ({ tea, onEdit }: Props) => {
     const tTea = useTranslations('Tea');
+    const tTeaType = useTranslations('TeaType');
     const tCommon = useTranslations('Common');
 
     return (
@@ -32,7 +33,9 @@ const ShowTeaCard = ({ tea, onEdit }: Props) => {
             <CardContent>
                 <dl className='grid grid-cols-2 gap-4'>
                     <dt>{tTea('type')}:</dt>{' '}
-                    <dd data-testid='tea-type'>{tea.type}</dd>
+                    <dd data-testid='tea-type'>
+                        {tea.type && tTeaType(tea.type)}
+                    </dd>
                     {tea.origin && (
                         <>
                             <dt>{tTea('origin')}:</dt>

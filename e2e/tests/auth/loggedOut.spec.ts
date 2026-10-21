@@ -41,6 +41,8 @@ test(
 
         await expect(page).toHaveURL('/login');
         await expect(page.getByText('Invalid email or password')).toBeVisible();
+        await expect(loginPage.emailInput).toHaveValue('invalid@example.com');
+        await expect(loginPage.passwordInput).toHaveValue('invalidpassword');
     },
 );
 

@@ -2,20 +2,20 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import i18nProvider from '@test/i18nProvider';
-import { getStubTea } from '@test/tea';
+import { getStubTeaValues } from '@test/tea';
 
-import TeaEditCard from './teaEditCard';
+import TeaEditCard from '.';
 
 describe('TeaEditCard', () => {
     it('should render the TeaEditCard component', () => {
         // arrange
-        const tea = getStubTea();
+        const teaValues = getStubTeaValues();
 
         // act
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: tea, errors: {} }}
+                values={teaValues}
                 action={vi.fn()}
             />,
             { wrapper: i18nProvider },
@@ -23,10 +23,12 @@ describe('TeaEditCard', () => {
 
         // assert
         expect(screen.getByText('Test Title')).toBeInTheDocument();
-        expect(screen.getByDisplayValue(tea.name)).toBeInTheDocument();
+        expect(screen.getByDisplayValue(teaValues.name)).toBeInTheDocument();
         expect(screen.getByRole('combobox')).toHaveValue('Green');
-        expect(screen.getByDisplayValue(tea.origin!)).toBeInTheDocument();
-        expect(screen.getByDisplayValue(tea.storeUrl!)).toBeInTheDocument();
+        expect(screen.getByDisplayValue(teaValues.origin!)).toBeInTheDocument();
+        expect(
+            screen.getByDisplayValue(teaValues.storeUrl!),
+        ).toBeInTheDocument();
         expect(
             screen.getByRole('button', { name: 'Save' }),
         ).toBeInTheDocument();
@@ -34,14 +36,9 @@ describe('TeaEditCard', () => {
 
     it('should render the TeaEditCard component with empty values', () => {
         // act
-        render(
-            <TeaEditCard
-                title='Test Title'
-                initialState={{ values: {}, errors: {} }}
-                action={vi.fn()}
-            />,
-            { wrapper: i18nProvider },
-        );
+        render(<TeaEditCard title='Test Title' action={vi.fn()} />, {
+            wrapper: i18nProvider,
+        });
 
         // assert
         expect(screen.getByPlaceholderText('Name')).toHaveValue('');
@@ -71,17 +68,20 @@ describe('TeaEditCard', () => {
         'should display error message for invalid $inputField',
         async ({ inputField, expectedError }) => {
             // arrange
-            const tea = getStubTea();
+            const teaValues = getStubTeaValues();
             const onAction = vi.fn().mockResolvedValueOnce({
-                values: tea,
                 errors: {
-                    [inputField]: [expectedError],
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
             });
+
             render(
                 <TeaEditCard
                     title='Test Title'
-                    initialState={{ values: tea, errors: {} }}
+                    values={teaValues}
                     action={onAction}
                 />,
                 { wrapper: i18nProvider },
@@ -97,17 +97,17 @@ describe('TeaEditCard', () => {
 
     it('should display form error message', async () => {
         // arrange
-        const tea = getStubTea();
+        const teaValues = getStubTeaValues();
         const onAction = vi.fn().mockResolvedValueOnce({
-            values: tea,
             errors: {
-                form: ['Form error'],
+                fieldErrors: {},
+                formErrors: ['Form error'],
             },
         });
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: tea, errors: {} }}
+                values={teaValues}
                 action={onAction}
             />,
             { wrapper: i18nProvider },
@@ -122,11 +122,11 @@ describe('TeaEditCard', () => {
 
     it('should update type field when a new type is selected', async () => {
         // arrange
-        const tea = getStubTea();
+        const teaValues = getStubTeaValues();
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: tea, errors: {} }}
+                values={teaValues}
                 action={vi.fn()}
             />,
             { wrapper: i18nProvider },

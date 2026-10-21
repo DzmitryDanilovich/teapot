@@ -1,7 +1,10 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { useActionState } from 'react';
 
+import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
+
+import { getErrorMessages } from '@/common/clientFormErrorsService';
+import { useCustomForm } from '@/common/useCustomForm';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -19,11 +22,17 @@ import {
 import { Input } from '@/components/ui/input';
 
 import { signUp } from './actions';
+import { createSignUpSchema } from './schemas';
 
 const SignUpForm = () => {
     const t = useTranslations('LogIn');
+    const tForm = useTranslations('LogInForm');
+    const schema = useMemo(() => createSignUpSchema(tForm), [tForm]);
 
-    const [state, formAction, isPending] = useActionState(signUp, null);
+    const { register, onSubmit, errors, isPending } = useCustomForm({
+        schema,
+        action: signUp,
+    });
 
     return (
         <Card className='w-96'>
@@ -31,26 +40,28 @@ const SignUpForm = () => {
                 <CardTitle>{t('signUp')}</CardTitle>
             </CardHeader>
             <CardContent>
-                {state?.errors.form && (
-                    <p role='alert' className='text-destructive mb-4 text-sm'>
-                        {state.errors.form.join('; ')}
+                {errors.root && (
+                    <p
+                        role='alert'
+                        className='text-destructive mb-4 text-sm whitespace-pre-line'
+                    >
+                        {errors.root?.message}
                     </p>
                 )}
-                <form id='signUpForm' action={formAction}>
+                <form
+                    id='signUpForm'
+                    onSubmit={(event) => void onSubmit(event)}
+                >
                     <FieldGroup>
                         <Field>
                             <FieldLabel htmlFor='name'>{t('name')}</FieldLabel>
                             <Input
                                 type='text'
                                 id='name'
-                                name='name'
-                                defaultValue={state?.values.name}
-                                required
+                                {...register('name')}
                             />
                             <FieldError
-                                errors={state?.errors.name?.map((e) => ({
-                                    message: e,
-                                }))}
+                                errors={getErrorMessages(errors.name)}
                             />
                         </Field>
 
@@ -61,14 +72,10 @@ const SignUpForm = () => {
                             <Input
                                 type='email'
                                 id='email'
-                                name='email'
-                                defaultValue={state?.values.email}
-                                required
+                                {...register('email')}
                             />
                             <FieldError
-                                errors={state?.errors.email?.map((e) => ({
-                                    message: e,
-                                }))}
+                                errors={getErrorMessages(errors.email)}
                             />
                         </Field>
 
@@ -79,14 +86,10 @@ const SignUpForm = () => {
                             <Input
                                 type='password'
                                 id='password'
-                                name='password'
-                                defaultValue={state?.values.password}
-                                required
+                                {...register('password')}
                             />
                             <FieldError
-                                errors={state?.errors.password?.map((e) => ({
-                                    message: e,
-                                }))}
+                                errors={getErrorMessages(errors.password)}
                             />
                         </Field>
                     </FieldGroup>

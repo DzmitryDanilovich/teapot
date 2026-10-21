@@ -2,36 +2,27 @@
 
 import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { z } from 'zod';
+import z from 'zod';
 
-import { collectErrors } from '@/common/errorCollector';
 import { redirect } from '@/i18n/redirect';
-import type { Translator } from '@/i18n/types';
 import { auth } from '@/lib/auth';
 
-const createLogInSchema = (t: Translator) =>
-    z.object({
-        email: z.email(t('invalidEmailAddress')),
-        password: z.string().min(1, t('passwordIsRequired')),
-    });
+import {
+    createLogInSchema,
+    createSignUpSchema,
+    type LogInValues,
+    type SignUpValues,
+} from './schemas';
 
-type LogInValues = z.infer<ReturnType<typeof createLogInSchema>>;
-
-export const logIn = async (_previousState: unknown, formData: FormData) => {
-    const t = await getTranslations('LogInActions');
+export const logIn = async (values: LogInValues) => {
+    const t = await getTranslations('LogInForm');
     const logInSchema = createLogInSchema(t);
 
-    const rawData = {
-        email: formData.get('email'),
-        password: formData.get('password'),
-    };
-
-    const parsedData = logInSchema.safeParse(rawData);
+    const parsedData = logInSchema.safeParse(values);
 
     if (!parsedData.success) {
         return {
-            errors: collectErrors<LogInValues>(parsedData.error.issues),
-            values: rawData as LogInValues,
+            errors: z.flattenError(parsedData.error),
         };
     }
 
@@ -46,46 +37,24 @@ export const logIn = async (_previousState: unknown, formData: FormData) => {
     } catch (error: unknown) {
         return {
             errors: {
-                form: [(error as Error).message || t('logInError')],
+                formErrors: [(error as Error).message || t('logInError')],
+                fieldErrors: {},
             },
-            values: rawData as LogInValues,
         };
     }
 
     return await redirect('/');
 };
 
-const createSignUpSchema = (t: Translator) =>
-    z.object({
-        name: z.string().min(1, t('nameIsRequired')),
-        email: z.email(t('invalidEmailAddress')),
-        password: z
-            .string()
-            .min(8, t('passwordLengthError', { minLength: '8' }))
-            .regex(/[A-Z]/, t('passwordMustContainUppercase'))
-            .regex(/[a-z]/, t('passwordMustContainLowercase'))
-            .regex(/\d/, t('passwordMustContainNumber'))
-            .regex(/[@$!%*?&]/, t('passwordMustContainSpecialCharacter')),
-    });
-
-export type SignUpValues = z.infer<ReturnType<typeof createSignUpSchema>>;
-
-export const signUp = async (_previousState: unknown, formData: FormData) => {
-    const t = await getTranslations('LogInActions');
+export const signUp = async (values: SignUpValues) => {
+    const t = await getTranslations('LogInForm');
     const signUpSchema = createSignUpSchema(t);
 
-    const rawData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        password: formData.get('password'),
-    };
-
-    const parsedData = signUpSchema.safeParse(rawData);
+    const parsedData = signUpSchema.safeParse(values);
 
     if (!parsedData.success) {
         return {
-            errors: collectErrors<SignUpValues>(parsedData.error.issues),
-            values: rawData as SignUpValues,
+            errors: z.flattenError(parsedData.error),
         };
     }
 
@@ -101,12 +70,9 @@ export const signUp = async (_previousState: unknown, formData: FormData) => {
     } catch (error: unknown) {
         return {
             errors: {
-                form: [
-                    (error as Error).message ||
-                        'An error occurred during signup',
-                ],
+                formErrors: [(error as Error).message || t('signUpError')],
+                fieldErrors: {},
             },
-            values: rawData as SignUpValues,
         };
     }
 

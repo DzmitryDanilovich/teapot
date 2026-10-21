@@ -25,10 +25,12 @@ describe('SignUpForm', () => {
 
     it('should submit the form with name, email, and password', async () => {
         // arrange
-        const expectedFormData = new FormData();
-        expectedFormData.append('name', 'testuser');
-        expectedFormData.append('email', 'test@example.com');
-        expectedFormData.append('password', '12qw!@QW');
+        const values = {
+            name: 'testuser',
+            email: 'test@example.com',
+            password: '12qw!@QW',
+        };
+
         render(<SignUpForm />, { wrapper: i18nProvider });
 
         // act
@@ -42,19 +44,15 @@ describe('SignUpForm', () => {
         await userEvent.click(submitButton);
 
         // assert
-        expect(mockSignUp).toHaveBeenCalledWith(null, expectedFormData);
+        expect(mockSignUp).toHaveBeenCalledWith(values);
     });
 
     it('should preserve values in the form fields', async () => {
         // arrange
         mockSignUp.mockResolvedValueOnce({
             errors: {
-                form: ['Form error'],
-            },
-            values: {
-                name: 'testuser',
-                email: 'test@example.com',
-                password: '12qw!@QW',
+                fieldErrors: {},
+                formErrors: ['Form error'],
             },
         });
         render(<SignUpForm />, { wrapper: i18nProvider });
@@ -94,12 +92,10 @@ describe('SignUpForm', () => {
             // arrange
             mockSignUp.mockResolvedValueOnce({
                 errors: {
-                    [inputField]: [expectedError],
-                },
-                values: {
-                    name: 'testuser',
-                    email: 'test@example.com',
-                    password: '12qw!@QW',
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
             });
             render(<SignUpForm />, { wrapper: i18nProvider });
@@ -125,12 +121,8 @@ describe('SignUpForm', () => {
         // arrange
         mockSignUp.mockResolvedValueOnce({
             errors: {
-                form: ['Form error'],
-            },
-            values: {
-                name: 'testuser',
-                email: 'test@example.com',
-                password: '12qw!@QW',
+                fieldErrors: {},
+                formErrors: ['Form error'],
             },
         });
         render(<SignUpForm />, { wrapper: i18nProvider });

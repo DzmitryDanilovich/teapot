@@ -25,9 +25,11 @@ describe('LogInForm', () => {
 
     it('should submit the form with email and password', async () => {
         // arrange
-        const expectedFormData = new FormData();
-        expectedFormData.append('email', 'test@example.com');
-        expectedFormData.append('password', '12qw!@QW');
+        const values = {
+            email: 'test@example.com',
+            password: '12qw!@QW',
+        };
+
         render(<LogInForm />, { wrapper: i18nProvider });
 
         // act
@@ -39,33 +41,7 @@ describe('LogInForm', () => {
         await userEvent.click(submitButton);
 
         // assert
-        expect(mockLogIn).toHaveBeenCalledWith(null, expectedFormData);
-    });
-
-    it('should preserve values in the form fields', async () => {
-        // arrange
-        mockLogIn.mockResolvedValueOnce({
-            errors: {
-                form: ['Form error'],
-            },
-            values: {
-                email: 'test@example.com',
-                password: '12qw!@QW',
-            },
-        });
-        render(<LogInForm />, { wrapper: i18nProvider });
-
-        // act
-        const emailInput = screen.getByLabelText('Email');
-        await userEvent.type(emailInput, 'test@example.com');
-        const passwordInput = screen.getByLabelText('Password');
-        await userEvent.type(passwordInput, '12qw!@QW');
-        const submitButton = screen.getByRole('button', { name: 'Log In' });
-        await userEvent.click(submitButton);
-
-        // assert
-        expect(screen.getByLabelText('Email')).toHaveValue('test@example.com');
-        expect(screen.getByLabelText('Password')).toHaveValue('12qw!@QW');
+        expect(mockLogIn).toHaveBeenCalledWith(values);
     });
 
     it.each([
@@ -83,9 +59,11 @@ describe('LogInForm', () => {
             // arrange
             mockLogIn.mockResolvedValueOnce({
                 errors: {
-                    [inputField]: [expectedError],
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
-                values: { email: 'test@example.com', password: '12qw!@QW' },
             });
             render(<LogInForm />, { wrapper: i18nProvider });
 
@@ -106,11 +84,8 @@ describe('LogInForm', () => {
         // arrange
         mockLogIn.mockResolvedValueOnce({
             errors: {
-                form: ['Form error'],
-            },
-            values: {
-                email: 'test@example.com',
-                password: '12qw!@QW',
+                formErrors: ['Form error'],
+                fieldErrors: {},
             },
         });
         render(<LogInForm />, { wrapper: i18nProvider });

@@ -20,7 +20,7 @@
         "logInWith": "Войти через {provider}",
         "errorDuringLoginWith": "Произошла ошибка при входе через {provider}"
     },
-    "LogInActions": {
+    "LogInForm": {
         "invalidEmailAddress": "Неверный адрес электронной почты",
         "passwordIsRequired": "Требуется пароль",
         "logInError": "Произошла ошибка при входе в систему.",
