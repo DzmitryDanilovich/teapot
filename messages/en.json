@@ -20,7 +20,7 @@
         "logInWith": "Log in with {provider}",
         "errorDuringLoginWith": "An error occurred during {provider} login"
     },
-    "LogInActions": {
+    "LogInForm": {
         "invalidEmailAddress": "Invalid email address",
         "passwordIsRequired": "Password is required",
         "logInError": "An error occurred during login.",

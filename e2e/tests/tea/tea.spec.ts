@@ -39,7 +39,7 @@ test('open a tea card from the tea list', async ({ teaListPage, teaPage }) => {
     await teaListPage.openTeaListItemByName(SEED_TEA.name);
 
     await expect(teaPage.name).toHaveText(SEED_TEA.name);
-    await expect(teaPage.type).toHaveText(SEED_TEA.type);
+    await expect(teaPage.type).toHaveText('Green');
     await expect(teaPage.origin).toHaveText(SEED_TEA.origin);
     await expect(teaPage.storeUrl).toHaveText(SEED_TEA.storeUrl);
 });
@@ -57,7 +57,7 @@ test('edit a tea', async ({ teaListPage, teaPage }) => {
     );
 
     await expect(teaPage.name).toHaveText('Edited Tea');
-    await expect(teaPage.type).toHaveText('oolong');
+    await expect(teaPage.type).toHaveText('Oolong');
     await expect(teaPage.origin).toHaveText('Taiwan');
     await expect(teaPage.storeUrl).toHaveText(
         'https://www.example.com/edited-tea',

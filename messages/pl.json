@@ -20,7 +20,7 @@
         "logInWith": "Zaloguj się przez {provider}",
         "errorDuringLoginWith": "Wystąpił błąd podczas logowania przez {provider}"
     },
-    "LogInActions": {
+    "LogInForm": {
         "invalidEmailAddress": "Nieprawidłowy adres email",
         "passwordIsRequired": "Hasło jest wymagane",
         "logInError": "Wystąpił błąd podczas logowania.",

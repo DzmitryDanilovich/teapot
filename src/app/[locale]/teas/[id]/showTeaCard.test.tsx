@@ -19,7 +19,7 @@ describe('ShowTeaCard', () => {
 
         // assert
         expect(screen.getByText(tea.name)).toBeInTheDocument();
-        expect(screen.getByText(tea.type!)).toBeInTheDocument();
+        expect(screen.getByText('Green')).toBeInTheDocument();
         expect(screen.getByText(tea.origin!)).toBeInTheDocument();
         expect(screen.getByRole('link')).toHaveAttribute('href', tea.storeUrl);
         expect(

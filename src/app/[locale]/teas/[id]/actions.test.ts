@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { EditTeaValues } from '@/common/teaEditCard/schemas';
 import { redirect } from '@/i18n/redirect';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
@@ -43,8 +44,8 @@ vi.mock('next-intl/server', () => ({
     getTranslations: vi.fn().mockResolvedValue((key: string) => key),
 }));
 
-beforeAll(() => {
-    mockTeaFindUnique.mockResolvedValueOnce(getStubTea());
+beforeEach(() => {
+    mockTeaFindUnique.mockResolvedValue(getStubTea());
 });
 
 describe('deleteTea', () => {
@@ -92,21 +93,19 @@ describe('deleteTea', () => {
 });
 
 describe('editTea', () => {
-    const getEditedTeaFormData = () => {
-        const formData = new FormData();
-        formData.append('name', 'Green Tea Updated');
-        formData.append('type', 'green');
-        formData.append('origin', 'China');
-        formData.append('storeUrl', 'https://example.com/green-tea');
-        return formData;
-    };
+    const getEditedTeaValues = (): EditTeaValues => ({
+        name: 'Green Tea Updated',
+        type: 'green',
+        origin: 'China',
+        storeUrl: 'https://example.com/green-tea',
+    });
 
     it('should edit tea successfully with valid data', async () => {
         // arrange
-        const formData = getEditedTeaFormData();
+        const values = getEditedTeaValues();
 
         // act
-        await editTea(stubTeaId, null, formData);
+        await editTea(stubTeaId, values);
 
         // assert
         expect(mockTeaUpdate).toHaveBeenCalledWith({
@@ -122,11 +121,11 @@ describe('editTea', () => {
 
     it('should redirect to /teas after logging tea', async () => {
         // arrange
-        const formData = getEditedTeaFormData();
-        formData.append('storeUrl', 'https://example.com/green-tea');
+        const values = getEditedTeaValues();
+        values.storeUrl = 'https://example.com/green-tea';
 
         // act
-        await editTea(stubTeaId, null, formData);
+        await editTea(stubTeaId, values);
 
         // assert
         expect(mockRedirect).toHaveBeenCalledWith(`/teas/${stubTeaId}`);
@@ -165,21 +164,24 @@ describe('editTea', () => {
         `should return validation errors for invalid $inputField data`,
         async ({ inputField, inputData, expectedError }) => {
             // arrange
-            const formData = new FormData();
-            formData.append('name', inputData.name || '');
-            formData.append('type', inputData.type || '');
-            formData.append('origin', inputData.origin || '');
-            formData.append('storeUrl', inputData.storeUrl || '');
+            const values: EditTeaValues = {
+                name: inputData.name || '',
+                type: (inputData.type || '') as EditTeaValues['type'],
+                origin: inputData.origin || '',
+                storeUrl: inputData.storeUrl || '',
+            };
 
             // act
-            const result = await editTea(stubTeaId, null, formData);
+            const result = await editTea(stubTeaId, values);
 
             // assert
             expect(result).toEqual({
                 errors: {
-                    [inputField]: [expectedError],
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
-                values: expect.objectContaining(inputData),
             });
         },
     );
@@ -188,26 +190,38 @@ describe('editTea', () => {
         // arrange
         mockGetSession.mockResolvedValueOnce(null);
 
-        const formData = getEditedTeaFormData();
+        const values = getEditedTeaValues();
 
         // act
-        await editTea(stubTeaId, null, formData);
+        await editTea(stubTeaId, values);
 
         // assert
         expect(mockRedirect).toHaveBeenCalledWith('/login');
     });
 
-    it('should return not found if tea does not exist or does not belong to user', async () => {
+    it('should return not found if tea does not belong to user', async () => {
         // arrange
         mockGetSession.mockResolvedValueOnce({
             user: { id: 'wrong-user-id' },
         } as any);
-        mockTeaFindUnique.mockResolvedValueOnce(null);
 
-        const formData = getEditedTeaFormData();
+        const values = getEditedTeaValues();
 
         // act
-        await editTea(stubTeaId, null, formData);
+        await editTea(stubTeaId, values);
+
+        // assert
+        expect(mockNotFound).toHaveBeenCalled();
+    });
+
+    it('should return not found if tea does not exist', async () => {
+        // arrange
+        mockTeaFindUnique.mockResolvedValueOnce(null);
+
+        const values = getEditedTeaValues();
+
+        // act
+        await editTea(stubTeaId, values);
 
         // assert
         expect(mockNotFound).toHaveBeenCalled();

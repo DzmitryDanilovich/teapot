@@ -22,12 +22,13 @@ describe('logIn', () => {
         // arrange
         vi.spyOn(auth.api, 'signInEmail').mockResolvedValueOnce({} as any);
 
-        const formData = new FormData();
-        formData.append('email', 'test@example.com');
-        formData.append('password', '12qw!@QW');
+        const values = {
+            email: 'test@example.com',
+            password: '12qw!@QW',
+        };
 
         // act
-        await logIn(null, formData);
+        await logIn(values);
 
         // assert
         expect(mockRedirect).toHaveBeenCalledWith('/');
@@ -56,19 +57,22 @@ describe('logIn', () => {
             // arrange
             vi.spyOn(auth.api, 'signInEmail').mockResolvedValueOnce({} as any);
 
-            const formData = new FormData();
-            formData.append('email', inputData.email);
-            formData.append('password', inputData.password);
+            const values = {
+                email: inputData.email,
+                password: inputData.password,
+            };
 
             // act
-            const result = await logIn(null, formData);
+            const result = await logIn(values);
 
             // assert
             expect(result).toEqual({
                 errors: {
-                    [inputField]: [expectedError],
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
-                values: inputData,
             });
         },
     );
@@ -83,21 +87,19 @@ describe('logIn', () => {
             const mockError = new Error(returnedError);
             vi.spyOn(auth.api, 'signInEmail').mockRejectedValueOnce(mockError);
 
-            const formData = new FormData();
-            formData.append('email', 'test@example.com');
-            formData.append('password', '12qw!@QW');
+            const values = {
+                email: 'test@example.com',
+                password: '12qw!@QW',
+            };
 
             // act
-            const result = await logIn(null, formData);
+            const result = await logIn(values);
 
             // assert
             expect(result).toEqual({
                 errors: {
-                    form: [expectedError],
-                },
-                values: {
-                    email: 'test@example.com',
-                    password: '12qw!@QW',
+                    formErrors: [expectedError],
+                    fieldErrors: {},
                 },
             });
         },
@@ -112,13 +114,15 @@ describe('signUp', () => {
         const mockName = 'Test User';
         const mockEmail = 'test@example.com';
         const mockPassword = '12qw!@QW';
-        const formData = new FormData();
-        formData.append('name', mockName);
-        formData.append('email', mockEmail);
-        formData.append('password', mockPassword);
+
+        const values = {
+            name: mockName,
+            email: mockEmail,
+            password: mockPassword,
+        };
 
         // act
-        await signUp(null, formData);
+        await signUp(values);
 
         // assert
         expect(mockRedirect).toHaveBeenCalledWith('/');
@@ -194,27 +198,30 @@ describe('signUp', () => {
             // arrange
             vi.spyOn(auth.api, 'signUpEmail').mockResolvedValueOnce({} as any);
 
-            const formData = new FormData();
-            formData.append('name', inputData.name);
-            formData.append('email', inputData.email);
-            formData.append('password', inputData.password);
+            const values = {
+                name: inputData.name,
+                email: inputData.email,
+                password: inputData.password,
+            };
 
             // act
-            const result = await signUp(null, formData);
+            const result = await signUp(values);
 
             // assert
             expect(result).toEqual({
                 errors: {
-                    [inputField]: [expectedError],
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
-                values: inputData,
             });
         },
     );
 
     it.each([
         { returnedError: 'Signup failed', expectedError: 'Signup failed' },
-        { returnedError: '', expectedError: 'An error occurred during signup' },
+        { returnedError: '', expectedError: 'signUpError' },
     ])(
         'should return an error message if signup fails',
         async ({ returnedError, expectedError }) => {
@@ -222,23 +229,20 @@ describe('signUp', () => {
             const mockError = new Error(returnedError);
             vi.spyOn(auth.api, 'signUpEmail').mockRejectedValueOnce(mockError);
 
-            const formData = new FormData();
-            formData.append('name', 'Test User');
-            formData.append('email', 'test@example.com');
-            formData.append('password', '12qw!@QW');
+            const values = {
+                name: 'Test User',
+                email: 'test@example.com',
+                password: '12qw!@QW',
+            };
 
             // act
-            const result = await signUp(null, formData);
+            const result = await signUp(values);
 
             // assert
             expect(result).toEqual({
                 errors: {
-                    form: [expectedError],
-                },
-                values: {
-                    name: 'Test User',
-                    email: 'test@example.com',
-                    password: '12qw!@QW',
+                    fieldErrors: {},
+                    formErrors: [expectedError],
                 },
             });
         },

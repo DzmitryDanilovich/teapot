@@ -1,3 +1,4 @@
+import type { EditTeaValues } from '@/common/teaEditCard/schemas';
 import { redirect } from '@/i18n/redirect';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
@@ -35,14 +36,15 @@ vi.mock('next-intl/server', () => ({
 describe('logTea action', () => {
     it('should log valid tea data', async () => {
         // arrange
-        const formData = new FormData();
-        formData.append('name', 'Green Tea');
-        formData.append('type', 'green');
-        formData.append('origin', 'China');
-        formData.append('storeUrl', 'https://example.com/green-tea');
+        const values: EditTeaValues = {
+            name: 'Green Tea',
+            type: 'green',
+            origin: 'China',
+            storeUrl: 'https://example.com/green-tea',
+        };
 
         // act
-        await logTea(null, formData);
+        await logTea(values);
 
         // assert
         expect(mockTeaCreate).toHaveBeenCalledWith({
@@ -58,14 +60,15 @@ describe('logTea action', () => {
 
     it('should redirect to /teas after logging tea', async () => {
         // arrange
-        const formData = new FormData();
-        formData.append('name', 'Green Tea');
-        formData.append('type', 'green');
-        formData.append('origin', 'China');
-        formData.append('storeUrl', 'https://example.com/green-tea');
+        const values: EditTeaValues = {
+            name: 'Green Tea',
+            type: 'green',
+            origin: 'China',
+            storeUrl: 'https://example.com/green-tea',
+        };
 
         // act
-        await logTea(null, formData);
+        await logTea(values);
 
         // assert
         expect(mockRedirect).toHaveBeenCalledWith('/teas');
@@ -104,21 +107,24 @@ describe('logTea action', () => {
         `should return validation errors for invalid $inputField data`,
         async ({ inputField, inputData, expectedError }) => {
             // arrange
-            const formData = new FormData();
-            formData.append('name', inputData.name || '');
-            formData.append('type', inputData.type || '');
-            formData.append('origin', inputData.origin || '');
-            formData.append('storeUrl', inputData.storeUrl || '');
+            const values: EditTeaValues = {
+                name: inputData.name || '',
+                type: (inputData.type || '') as EditTeaValues['type'],
+                origin: inputData.origin || '',
+                storeUrl: inputData.storeUrl || '',
+            };
 
             // act
-            const result = await logTea(null, formData);
+            const result = await logTea(values);
 
             // assert
             expect(result).toEqual({
                 errors: {
-                    [inputField]: [expectedError],
+                    fieldErrors: {
+                        [inputField]: [expectedError],
+                    },
+                    formErrors: [],
                 },
-                values: expect.objectContaining(inputData),
             });
         },
     );
@@ -126,14 +132,15 @@ describe('logTea action', () => {
     it('should redirect to /login if user is not authenticated', async () => {
         // arrange
         mockGetSession.mockResolvedValueOnce(null);
-        const formData = new FormData();
-        formData.append('name', 'Green Tea');
-        formData.append('type', 'green');
-        formData.append('origin', 'China');
-        formData.append('storeUrl', 'https://example.com/green-tea');
+        const values: EditTeaValues = {
+            name: 'Green Tea',
+            type: 'green',
+            origin: 'China',
+            storeUrl: 'https://example.com/green-tea',
+        };
 
         // act
-        await logTea(null, formData);
+        await logTea(values);
 
         // assert
         expect(mockRedirect).toHaveBeenCalledWith('/login');

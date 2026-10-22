@@ -1,8 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useMemo } from 'react';
 
+import { getErrorMessages } from '@/common/clientFormErrorsService';
+import { useCustomForm } from '@/common/useCustomForm';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,11 +22,17 @@ import {
 import { Input } from '@/components/ui/input';
 
 import { logIn } from './actions';
+import { createLogInSchema } from './schemas';
 
 const LogInForm = () => {
     const t = useTranslations('LogIn');
+    const tForm = useTranslations('LogInForm');
+    const schema = useMemo(() => createLogInSchema(tForm), [tForm]);
 
-    const [state, formAction, isPending] = useActionState(logIn, null);
+    const { register, onSubmit, errors, isPending } = useCustomForm({
+        schema,
+        action: logIn,
+    });
 
     return (
         <Card className='w-96'>
@@ -32,12 +40,15 @@ const LogInForm = () => {
                 <CardTitle>{t('logIn')}</CardTitle>
             </CardHeader>
             <CardContent>
-                {state?.errors.form && (
-                    <p role='alert' className='text-destructive mb-4 text-sm'>
-                        {state.errors.form.join('; ')}
+                {errors.root && (
+                    <p
+                        role='alert'
+                        className='text-destructive mb-4 text-sm whitespace-pre-line'
+                    >
+                        {errors.root?.message}
                     </p>
                 )}
-                <form id='loginForm' action={formAction}>
+                <form id='loginForm' onSubmit={(event) => void onSubmit(event)}>
                     <FieldGroup>
                         <Field>
                             <FieldLabel htmlFor='email'>
@@ -46,14 +57,10 @@ const LogInForm = () => {
                             <Input
                                 type='email'
                                 id='email'
-                                name='email'
-                                defaultValue={state?.values.email}
-                                required
+                                {...register('email')}
                             />
                             <FieldError
-                                errors={state?.errors.email?.map((e) => ({
-                                    message: e,
-                                }))}
+                                errors={getErrorMessages(errors.email)}
                             />
                         </Field>
 
@@ -64,14 +71,10 @@ const LogInForm = () => {
                             <Input
                                 type='password'
                                 id='password'
-                                name='password'
-                                defaultValue={state?.values.password}
-                                required
+                                {...register('password')}
                             />
                             <FieldError
-                                errors={state?.errors.password?.map((e) => ({
-                                    message: e,
-                                }))}
+                                errors={getErrorMessages(errors.password)}
                             />
                         </Field>
                     </FieldGroup>
