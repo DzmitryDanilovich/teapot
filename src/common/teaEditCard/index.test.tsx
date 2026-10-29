@@ -2,20 +2,21 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import i18nProvider from '@test/i18nProvider';
-import { getStubTea } from '@test/tea';
+import { getStubTea, getStubTeaValues } from '@test/tea';
 
-import TeaEditCard from './teaEditCard';
+import TeaEditCard from '.';
 
 describe('TeaEditCard', () => {
     it('should render the TeaEditCard component', () => {
         // arrange
         const tea = getStubTea();
+        const teaValues = getStubTeaValues();
 
         // act
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: tea, errors: {} }}
+                initialState={teaValues}
                 action={vi.fn()}
             />,
             { wrapper: i18nProvider },
@@ -37,7 +38,7 @@ describe('TeaEditCard', () => {
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: {}, errors: {} }}
+                initialState={{}}
                 action={vi.fn()}
             />,
             { wrapper: i18nProvider },
@@ -71,17 +72,18 @@ describe('TeaEditCard', () => {
         'should display error message for invalid $inputField',
         async ({ inputField, expectedError }) => {
             // arrange
-            const tea = getStubTea();
+            const teaValues = getStubTeaValues();
+
             const onAction = vi.fn().mockResolvedValueOnce({
-                values: tea,
-                errors: {
+                status: 'error',
+                error: {
                     [inputField]: [expectedError],
                 },
             });
             render(
                 <TeaEditCard
                     title='Test Title'
-                    initialState={{ values: tea, errors: {} }}
+                    initialState={teaValues}
                     action={onAction}
                 />,
                 { wrapper: i18nProvider },
@@ -97,17 +99,17 @@ describe('TeaEditCard', () => {
 
     it('should display form error message', async () => {
         // arrange
-        const tea = getStubTea();
+        const teaValues = getStubTeaValues();
         const onAction = vi.fn().mockResolvedValueOnce({
-            values: tea,
-            errors: {
-                form: ['Form error'],
+            status: 'error',
+            error: {
+                '': ['Form error'],
             },
         });
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: tea, errors: {} }}
+                initialState={teaValues}
                 action={onAction}
             />,
             { wrapper: i18nProvider },
@@ -122,11 +124,11 @@ describe('TeaEditCard', () => {
 
     it('should update type field when a new type is selected', async () => {
         // arrange
-        const tea = getStubTea();
+        const teaValues = getStubTeaValues();
         render(
             <TeaEditCard
                 title='Test Title'
-                initialState={{ values: tea, errors: {} }}
+                initialState={teaValues}
                 action={vi.fn()}
             />,
             { wrapper: i18nProvider },
@@ -141,5 +143,25 @@ describe('TeaEditCard', () => {
 
         // assert
         expect(typeCombobox).toHaveValue('Black');
+    });
+
+    it('should keep type empty if no type is selected', async () => {
+        // arrange
+        const teaValues = getStubTeaValues();
+        render(
+            <TeaEditCard
+                title='Test Title'
+                initialState={teaValues}
+                action={vi.fn()}
+            />,
+            { wrapper: i18nProvider },
+        );
+
+        // act
+        const typeCombobox = screen.getByRole('combobox');
+        await userEvent.clear(typeCombobox);
+
+        // assert
+        expect(typeCombobox).toHaveValue('');
     });
 });

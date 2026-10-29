@@ -1,9 +1,15 @@
 'use client';
-
+import {
+    DefaultValue,
+    getFormProps,
+    getInputProps,
+    useInputControl,
+} from '@conform-to/react';
+import { SubmissionResult } from '@conform-to/zod/v4';
 import { useTranslations } from 'next-intl';
-import { useActionState, useState } from 'react';
 
-import type { Errors } from '@/common/errorCollector';
+import { isTeaType } from '@/common/typeGuards/teaType';
+import { useCustomForm } from '@/common/useCustomForm';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,67 +26,84 @@ import {
 } from '@/components/ui/combobox';
 import { Field, FieldError, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Tea, TeaType } from '@/generated/prisma/browser';
+import { TeaType } from '@/generated/prisma/browser';
 
-interface State {
-    values: Partial<Tea>;
-    errors: Errors<Partial<Tea>>;
-}
+import { createEditTeaSchema, type EditTeaValues } from './schemas';
 
 interface Props {
     title: string;
-    initialState: State | null;
-    action: (previousState: State | null, formData: FormData) => Promise<State>;
+    initialState: DefaultValue<EditTeaValues>;
+    action: (
+        previousState: unknown,
+        formData: FormData,
+    ) => Promise<SubmissionResult>;
 }
 
 const TeaEditCard = ({ title, initialState, action }: Props) => {
     const tTea = useTranslations('Tea');
     const tTeaType = useTranslations('TeaType');
+    const tEditTeaForm = useTranslations('EditTeaForm');
     const tCommon = useTranslations('Common');
 
-    const [state, formAction, isPending] = useActionState(action, initialState);
-    const [type, setType] = useState<TeaType | null>(
-        state?.values.type || null,
-    );
+    const schema = createEditTeaSchema(tEditTeaForm);
+
+    const { form, fields, isPending, formAction } = useCustomForm({
+        schema,
+        action,
+        defaultValue: initialState,
+        id: 'logTeaForm',
+    });
+
+    const type = useInputControl(fields.type);
 
     return (
         <Card className='w-96'>
             <CardHeader>
                 <CardTitle>{title}</CardTitle>
             </CardHeader>
-            {state?.errors?.form && (
-                <p className='text-destructive mb-4 text-sm'>
-                    {state.errors.form.join(', ')}
+            {form.errors && (
+                <p
+                    role='alert'
+                    id={form.errorId}
+                    className='text-destructive mb-4 text-sm'
+                >
+                    {form.errors.join(', ')}
                 </p>
             )}
             <CardContent>
-                <form id='logTeaForm' action={formAction}>
+                <form {...getFormProps(form)} action={formAction}>
                     <FieldGroup>
-                        <Field>
+                        <Field data-invalid={!fields.name.valid}>
                             <Input
-                                type='text'
-                                name='name'
-                                defaultValue={state?.values?.name}
+                                {...getInputProps(fields.name, {
+                                    type: 'text',
+                                })}
                                 placeholder={tTea('name')}
                             />
                             <FieldError
-                                errors={state?.errors?.name?.map((e) => ({
+                                id={fields.name.errorId}
+                                errors={fields.name.errors?.map((e) => ({
                                     message: e,
                                 }))}
                             />
                         </Field>
-                        <Field>
+                        <Field data-invalid={!fields.type.valid}>
                             <Combobox
-                                name='type'
+                                name={fields.type.name}
                                 items={Object.values(TeaType)}
-                                value={type}
-                                onValueChange={setType}
-                                itemToStringLabel={(item) =>
-                                    item && tTeaType(item)
+                                value={type.value}
+                                onValueChange={(value) =>
+                                    type.change(value ?? '')
+                                }
+                                itemToStringLabel={(value) =>
+                                    isTeaType(value) ? tTeaType(value) : ''
                                 }
                                 required
                             >
-                                <ComboboxInput placeholder={tTea('type')} />
+                                <ComboboxInput
+                                    onBlur={type.blur}
+                                    placeholder={tTea('type')}
+                                />
                                 <ComboboxContent>
                                     {Object.values(TeaType).map((tea) => (
                                         <ComboboxItem key={tea} value={tea}>
@@ -90,33 +113,36 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                                 </ComboboxContent>
                             </Combobox>
                             <FieldError
-                                errors={state?.errors?.type?.map((e) => ({
+                                id={fields.type.errorId}
+                                errors={fields.type.errors?.map((e) => ({
                                     message: e,
                                 }))}
                             />
                         </Field>
                         <Field>
                             <Input
-                                type='text'
-                                name='origin'
-                                defaultValue={state?.values?.origin || ''}
+                                {...getInputProps(fields.origin, {
+                                    type: 'text',
+                                })}
                                 placeholder={tTea('origin')}
                             />
                             <FieldError
-                                errors={state?.errors?.origin?.map((e) => ({
+                                id={fields.origin.errorId}
+                                errors={fields.origin.errors?.map((e) => ({
                                     message: e,
                                 }))}
                             />
                         </Field>
                         <Field>
                             <Input
-                                type='text'
-                                name='storeUrl'
-                                defaultValue={state?.values?.storeUrl || ''}
+                                {...getInputProps(fields.storeUrl, {
+                                    type: 'text',
+                                })}
                                 placeholder={tTea('storeUrl')}
                             />
                             <FieldError
-                                errors={state?.errors?.storeUrl?.map((e) => ({
+                                id={fields.storeUrl.errorId}
+                                errors={fields.storeUrl.errors?.map((e) => ({
                                     message: e,
                                 }))}
                             />
@@ -125,7 +151,7 @@ const TeaEditCard = ({ title, initialState, action }: Props) => {
                 </form>
             </CardContent>
             <CardFooter>
-                <Button disabled={isPending} type='submit' form='logTeaForm'>
+                <Button disabled={isPending} type='submit' form={form.id}>
                     {tCommon('save')}
                 </Button>
             </CardFooter>

@@ -1,13 +1,11 @@
 'use server';
 
+import { parseWithZod } from '@conform-to/zod/v4';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { z } from 'zod';
 
-import { collectErrors } from '@/common/errorCollector';
-import { Tea, TeaType } from '@/generated/prisma/browser';
+import { createEditTeaSchema } from '@/common/teaEditCard/schemas';
 import { redirect } from '@/i18n/redirect';
-import type { Translator } from '@/i18n/types';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 
@@ -35,25 +33,12 @@ export const deleteTea = async (id: string) => {
     return await redirect('/teas');
 };
 
-const createEditTeaSchema = (t: Translator) =>
-    z.object({
-        name: z.string().min(1, t('nameIsRequired')),
-        type: z.enum(TeaType, t('validTypeIsRequired')),
-        origin: z.string().optional(),
-        storeUrl: z.preprocess(
-            (value) => (value === '' ? undefined : value),
-            z.url(t('storeUrlMustBeValid')).optional(),
-        ),
-    });
-
-type EditTeaValues = z.infer<ReturnType<typeof createEditTeaSchema>>;
-
 export const editTea = async (
     teaId: string,
     _previousState: unknown,
     formData: FormData,
 ) => {
-    const t = await getTranslations('EditTeaAction');
+    const t = await getTranslations('EditTeaForm');
     const editTeaSchema = createEditTeaSchema(t);
 
     const session = await getSession();
@@ -72,26 +57,16 @@ export const editTea = async (
         notFound();
     }
 
-    const rawData = {
-        name: formData.get('name'),
-        type: formData.get('type'),
-        origin: formData.get('origin'),
-        storeUrl: formData.get('storeUrl'),
-    };
+    const submission = parseWithZod(formData, { schema: editTeaSchema });
 
-    const parsedData = editTeaSchema.safeParse(rawData);
-
-    if (!parsedData.success) {
-        return {
-            errors: collectErrors<EditTeaValues>(parsedData.error.issues),
-            values: rawData as Partial<Tea>,
-        };
+    if (submission.status !== 'success') {
+        return submission.reply();
     }
 
     await prisma.tea.update({
         where: { id: teaId },
         data: {
-            ...parsedData.data,
+            ...submission.value,
         },
     });
 

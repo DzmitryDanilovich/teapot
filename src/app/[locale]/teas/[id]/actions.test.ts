@@ -43,8 +43,8 @@ vi.mock('next-intl/server', () => ({
     getTranslations: vi.fn().mockResolvedValue((key: string) => key),
 }));
 
-beforeAll(() => {
-    mockTeaFindUnique.mockResolvedValueOnce(getStubTea());
+beforeEach(() => {
+    mockTeaFindUnique.mockResolvedValue(getStubTea());
 });
 
 describe('deleteTea', () => {
@@ -123,7 +123,6 @@ describe('editTea', () => {
     it('should redirect to /teas after logging tea', async () => {
         // arrange
         const formData = getEditedTeaFormData();
-        formData.append('storeUrl', 'https://example.com/green-tea');
 
         // act
         await editTea(stubTeaId, null, formData);
@@ -175,11 +174,10 @@ describe('editTea', () => {
             const result = await editTea(stubTeaId, null, formData);
 
             // assert
-            expect(result).toEqual({
-                errors: {
+            expect(result).toMatchObject({
+                error: {
                     [inputField]: [expectedError],
                 },
-                values: expect.objectContaining(inputData),
             });
         },
     );
@@ -197,11 +195,23 @@ describe('editTea', () => {
         expect(mockRedirect).toHaveBeenCalledWith('/login');
     });
 
-    it('should return not found if tea does not exist or does not belong to user', async () => {
+    it('should return not found if tea does not belong to user', async () => {
         // arrange
         mockGetSession.mockResolvedValueOnce({
             user: { id: 'wrong-user-id' },
         } as any);
+
+        const formData = getEditedTeaFormData();
+
+        // act
+        await editTea(stubTeaId, null, formData);
+
+        // assert
+        expect(mockNotFound).toHaveBeenCalled();
+    });
+
+    it('should return not found if tea does not exist', async () => {
+        // arrange
         mockTeaFindUnique.mockResolvedValueOnce(null);
 
         const formData = getEditedTeaFormData();

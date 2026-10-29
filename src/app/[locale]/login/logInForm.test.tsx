@@ -45,12 +45,9 @@ describe('LogInForm', () => {
     it('should preserve values in the form fields', async () => {
         // arrange
         mockLogIn.mockResolvedValueOnce({
-            errors: {
-                form: ['Form error'],
-            },
-            values: {
-                email: 'test@example.com',
-                password: '12qw!@QW',
+            status: 'error',
+            error: {
+                '': ['Form error'],
             },
         });
         render(<LogInForm />, { wrapper: i18nProvider });
@@ -82,10 +79,10 @@ describe('LogInForm', () => {
         async ({ inputField, expectedError }) => {
             // arrange
             mockLogIn.mockResolvedValueOnce({
-                errors: {
+                status: 'error',
+                error: {
                     [inputField]: [expectedError],
                 },
-                values: { email: 'test@example.com', password: '12qw!@QW' },
             });
             render(<LogInForm />, { wrapper: i18nProvider });
 
@@ -105,12 +102,9 @@ describe('LogInForm', () => {
     it('should display form error message', async () => {
         // arrange
         mockLogIn.mockResolvedValueOnce({
-            errors: {
-                form: ['Form error'],
-            },
-            values: {
-                email: 'test@example.com',
-                password: '12qw!@QW',
+            status: 'error',
+            error: {
+                '': ['Form error'],
             },
         });
         render(<LogInForm />, { wrapper: i18nProvider });

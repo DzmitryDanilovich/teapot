@@ -48,13 +48,9 @@ describe('SignUpForm', () => {
     it('should preserve values in the form fields', async () => {
         // arrange
         mockSignUp.mockResolvedValueOnce({
-            errors: {
-                form: ['Form error'],
-            },
-            values: {
-                name: 'testuser',
-                email: 'test@example.com',
-                password: '12qw!@QW',
+            status: 'error',
+            error: {
+                '': ['Form error'],
             },
         });
         render(<SignUpForm />, { wrapper: i18nProvider });
@@ -93,13 +89,9 @@ describe('SignUpForm', () => {
         async ({ inputField, expectedError }) => {
             // arrange
             mockSignUp.mockResolvedValueOnce({
-                errors: {
+                status: 'error',
+                error: {
                     [inputField]: [expectedError],
-                },
-                values: {
-                    name: 'testuser',
-                    email: 'test@example.com',
-                    password: '12qw!@QW',
                 },
             });
             render(<SignUpForm />, { wrapper: i18nProvider });
@@ -124,13 +116,9 @@ describe('SignUpForm', () => {
     it('should display form error message', async () => {
         // arrange
         mockSignUp.mockResolvedValueOnce({
-            errors: {
-                form: ['Form error'],
-            },
-            values: {
-                name: 'testuser',
-                email: 'test@example.com',
-                password: '12qw!@QW',
+            status: 'error',
+            error: {
+                '': ['Form error'],
             },
         });
         render(<SignUpForm />, { wrapper: i18nProvider });

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import TeaEditCard from '@/components/teaEditCard';
+import TeaEditCard from '@/common/teaEditCard';
 import type { Tea } from '@/generated/prisma/browser';
 
 import { editTea } from './actions';
@@ -19,7 +19,7 @@ const EditTeaForm = ({ tea }: Props) => {
     return (
         <TeaEditCard
             title={t('editTea')}
-            initialState={{ values: tea, errors: {} }}
+            initialState={tea}
             action={boundEditTea}
         />
     );
