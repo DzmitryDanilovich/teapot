@@ -20,7 +20,7 @@
         "logInWith": "Войти через {provider}",
         "errorDuringLoginWith": "Произошла ошибка при входе через {provider}"
     },
-    "LogInActions": {
+    "LogInForm": {
         "invalidEmailAddress": "Неверный адрес электронной почты",
         "passwordIsRequired": "Требуется пароль",
         "logInError": "Произошла ошибка при входе в систему.",
@@ -54,7 +54,7 @@
         "white": "Белый",
         "puerh": "Пуэр"
     },
-    "EditTeaAction": {
+    "EditTeaForm": {
         "nameIsRequired": "Название обязательно",
         "validTypeIsRequired": "Тип обязателен",
         "storeUrlMustBeValid": "URL магазина должен быть действительным URL"

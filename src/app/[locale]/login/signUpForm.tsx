@@ -1,7 +1,10 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import { useActionState } from 'react';
 
+import { getFormProps } from '@conform-to/react';
+import { useTranslations } from 'next-intl';
+
+import { CustomField } from '@/common/customField';
+import { useCustomForm } from '@/common/useCustomForm';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,20 +13,22 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    Field,
-    FieldError,
-    FieldGroup,
-    FieldLabel,
-} from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { FieldGroup } from '@/components/ui/field';
 
 import { signUp } from './actions';
+import { createSignUpSchema } from './schemas';
 
 const SignUpForm = () => {
     const t = useTranslations('LogIn');
+    const tForm = useTranslations('LogInForm');
 
-    const [state, formAction, isPending] = useActionState(signUp, null);
+    const schema = createSignUpSchema(tForm);
+
+    const { form, fields, isPending, formAction } = useCustomForm({
+        schema,
+        action: signUp,
+        id: 'signUpForm',
+    });
 
     return (
         <Card className='w-96'>
@@ -31,69 +36,39 @@ const SignUpForm = () => {
                 <CardTitle>{t('signUp')}</CardTitle>
             </CardHeader>
             <CardContent>
-                {state?.errors.form && (
-                    <p role='alert' className='text-destructive mb-4 text-sm'>
-                        {state.errors.form.join('; ')}
+                {form.errors && (
+                    <p
+                        role='alert'
+                        id={form.errorId}
+                        className='text-destructive mb-4 text-sm'
+                    >
+                        {form.errors.join('; ')}
                     </p>
                 )}
-                <form id='signUpForm' action={formAction}>
+                <form {...getFormProps(form)} action={formAction}>
                     <FieldGroup>
-                        <Field>
-                            <FieldLabel htmlFor='name'>{t('name')}</FieldLabel>
-                            <Input
-                                type='text'
-                                id='name'
-                                name='name'
-                                defaultValue={state?.values.name}
-                                required
-                            />
-                            <FieldError
-                                errors={state?.errors.name?.map((e) => ({
-                                    message: e,
-                                }))}
-                            />
-                        </Field>
+                        <CustomField
+                            field={fields.name}
+                            label={t('name')}
+                            fieldType='text'
+                        />
 
-                        <Field>
-                            <FieldLabel htmlFor='email'>
-                                {t('email')}
-                            </FieldLabel>
-                            <Input
-                                type='email'
-                                id='email'
-                                name='email'
-                                defaultValue={state?.values.email}
-                                required
-                            />
-                            <FieldError
-                                errors={state?.errors.email?.map((e) => ({
-                                    message: e,
-                                }))}
-                            />
-                        </Field>
+                        <CustomField
+                            field={fields.email}
+                            label={t('email')}
+                            fieldType='email'
+                        />
 
-                        <Field>
-                            <FieldLabel htmlFor='password'>
-                                {t('password')}
-                            </FieldLabel>
-                            <Input
-                                type='password'
-                                id='password'
-                                name='password'
-                                defaultValue={state?.values.password}
-                                required
-                            />
-                            <FieldError
-                                errors={state?.errors.password?.map((e) => ({
-                                    message: e,
-                                }))}
-                            />
-                        </Field>
+                        <CustomField
+                            field={fields.password}
+                            label={t('password')}
+                            fieldType='password'
+                        />
                     </FieldGroup>
                 </form>
             </CardContent>
             <CardFooter>
-                <Button disabled={isPending} type='submit' form='signUpForm'>
+                <Button disabled={isPending} type='submit' form={form.id}>
                     {t('signUp')}
                 </Button>
             </CardFooter>

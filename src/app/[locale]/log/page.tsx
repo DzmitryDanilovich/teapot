@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 
-import TeaEditCard from '@/components/teaEditCard';
+import TeaEditCard from '@/common/teaEditCard';
 
 import { logTea } from './actions';
 
