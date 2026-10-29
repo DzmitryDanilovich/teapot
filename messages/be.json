@@ -20,7 +20,7 @@
         "logInWith": "Увайсці праз {provider}",
         "errorDuringLoginWith": "Адбылася памылка падчас уваходу праз {provider}"
     },
-    "LogInActions": {
+    "LogInForm": {
         "invalidEmailAddress": "Няправільны адрас электроннай пошты",
         "passwordIsRequired": "Патрабуецца пароль",
         "logInError": "Адбылася памылка падчас уваходу ў сістэму.",
@@ -54,7 +54,7 @@
         "white": "Белы",
         "puerh": "Пуэр"
     },
-    "EditTeaAction": {
+    "EditTeaForm": {
         "nameIsRequired": "Назва абавязковая",
         "validTypeIsRequired": "Патрэбны правільны тып",
         "storeUrlMustBeValid": "URL крамы павінен быць сапраўдным URL"

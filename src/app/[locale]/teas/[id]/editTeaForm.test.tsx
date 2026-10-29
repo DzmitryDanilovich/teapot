@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 
-import TeaEditCard from '@/components/teaEditCard';
+import TeaEditCard from '@/common/teaEditCard';
 import i18nProvider from '@test/i18nProvider';
 import { getStubTea } from '@test/tea';
 
 import { editTea } from './actions';
 import EditTeaForm from './editTeaForm';
 
-vi.mock('@/components/teaEditCard', () => ({
+vi.mock('@/common/teaEditCard', () => ({
     default: vi.fn(() => <div>Mocked TeaEditCard</div>),
 }));
 
@@ -31,10 +31,7 @@ describe('EditTeaForm', () => {
         expect(mockTeaEditCard).toHaveBeenCalledWith(
             {
                 title: 'Edit Tea',
-                initialState: {
-                    values: tea,
-                    errors: {},
-                },
+                initialState: tea,
                 action: expect.any(Function),
             },
             undefined,

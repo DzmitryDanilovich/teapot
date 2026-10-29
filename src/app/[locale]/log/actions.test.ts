@@ -114,11 +114,10 @@ describe('logTea action', () => {
             const result = await logTea(null, formData);
 
             // assert
-            expect(result).toEqual({
-                errors: {
+            expect(result).toMatchObject({
+                error: {
                     [inputField]: [expectedError],
                 },
-                values: expect.objectContaining(inputData),
             });
         },
     );

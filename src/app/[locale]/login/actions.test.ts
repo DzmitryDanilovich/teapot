@@ -64,11 +64,10 @@ describe('logIn', () => {
             const result = await logIn(null, formData);
 
             // assert
-            expect(result).toEqual({
-                errors: {
+            expect(result).toMatchObject({
+                error: {
                     [inputField]: [expectedError],
                 },
-                values: inputData,
             });
         },
     );
@@ -91,13 +90,9 @@ describe('logIn', () => {
             const result = await logIn(null, formData);
 
             // assert
-            expect(result).toEqual({
-                errors: {
-                    form: [expectedError],
-                },
-                values: {
-                    email: 'test@example.com',
-                    password: '12qw!@QW',
+            expect(result).toMatchObject({
+                error: {
+                    '': [expectedError],
                 },
             });
         },
@@ -203,18 +198,17 @@ describe('signUp', () => {
             const result = await signUp(null, formData);
 
             // assert
-            expect(result).toEqual({
-                errors: {
+            expect(result).toMatchObject({
+                error: {
                     [inputField]: [expectedError],
                 },
-                values: inputData,
             });
         },
     );
 
     it.each([
         { returnedError: 'Signup failed', expectedError: 'Signup failed' },
-        { returnedError: '', expectedError: 'An error occurred during signup' },
+        { returnedError: '', expectedError: 'signUpError' },
     ])(
         'should return an error message if signup fails',
         async ({ returnedError, expectedError }) => {
@@ -231,14 +225,9 @@ describe('signUp', () => {
             const result = await signUp(null, formData);
 
             // assert
-            expect(result).toEqual({
-                errors: {
-                    form: [expectedError],
-                },
-                values: {
-                    name: 'Test User',
-                    email: 'test@example.com',
-                    password: '12qw!@QW',
+            expect(result).toMatchObject({
+                error: {
+                    '': [expectedError],
                 },
             });
         },
