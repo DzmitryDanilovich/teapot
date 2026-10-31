@@ -416,6 +416,8 @@ Server Components cannot have `onClick`. If you need an event handler, the compo
 
 ### Per-field validation errors with zod
 
+> Superseded in Task 25: Server Actions now return Conform's `submission.reply()`. See *Forms — Conform*.
+
 ```ts
 type FormValues = z.infer<typeof schema>;
 type FormState = {
@@ -622,6 +624,8 @@ Every call site becomes `await getSession()`.
 
 ## Pre-filled forms (edit pages)
 
+> Since Task 25 the record goes to Conform's `useForm({ defaultValue })` and the action state starts as `null`. See *Forms — Conform*. The `.bind()` pattern below is unchanged.
+
 Pass the existing record as the initial state of `useActionState`. The form fields use `defaultValue` — not `value` — so they're uncontrolled and don't fight React on re-render.
 
 ```tsx
@@ -776,7 +780,7 @@ Vitest resolves the `@/` alias from `tsconfig.json` natively via `resolve.tsconf
 
 ### What can and can't be tested
 
-- **Pure functions** (e.g. `collectErrors`) — trivial, no environment needed.
+- **Pure functions** (e.g. type guards like `isTeaType`) — trivial, no environment needed.
 - **Client Components** — render with RTL, mock Server Actions with `vi.mock`, drive interactions with `@testing-library/user-event`.
 - **Async Server Components** — cannot be unit tested with Vitest yet. Cover their behavior with Playwright E2E instead.
 
@@ -1377,7 +1381,7 @@ messages: messages === undefined ? await getMessages() : messages
 
 So `<NextIntlClientProvider>` and `<NextIntlClientProvider messages={await getMessages()}>` are identical. Passing it explicitly is redundant.
 
-The payload nuance most people get backwards: **locale count does not affect client payload.** Only the active locale is ever serialized — a Polish user never receives English. What grows the payload is *message volume*. In Teapot, `LogInActions` is 40% of `en.json` and is used exclusively by Server Actions, yet ships to every browser on every page.
+The payload nuance most people get backwards: **locale count does not affect client payload.** Only the active locale is ever serialized — a Polish user never receives English. What grows the payload is *message volume*. In Teapot, the validation namespace (`LogInActions` at the time, now `LogInForm`) was 40% of `en.json` and used only by Server Actions, yet shipped to every browser on every page. Since Task 25 the client-side Zod schemas use it, so it now has to ship.
 
 The scalable fix is **not** slicing namespaces at the root — do that and a component reaching for an omitted namespace still typechecks (the augmentation describes the whole file, not what you handed the provider) and fails at runtime. The fix is to **translate on the server and pass rendered strings as props**, so the client boundary receives text rather than translation machinery. It doesn't work for components that select keys dynamically at runtime (e.g. `itemToStringLabel={(item) => tTeaType(item)}`), which genuinely need messages client-side.
 
@@ -1385,7 +1389,7 @@ If a real fallback chain is wanted, **deep-merge** English under the active loca
 
 ### Translating validation and auth errors
 
-- **Zod messages** live outside components, so they can't call a hook. Convert module-level schemas into **schema factories** taking `t`, and build the schema inside the action where `await getTranslations()` is available.
+- **Zod messages** live outside components, so they can't call a hook. Convert module-level schemas into **schema factories** taking `t`, and build the schema inside the action where `await getTranslations()` is available. Since Task 25 the same factory is also built on the client with `useTranslations`; see *Forms — Conform*.
 - **Better Auth** owns its own error strings. `@better-auth/i18n` translates them via `error.code` against a locale table. Belarusian isn't among its built-in locales, so those strings are supplied by hand. Wire `localeCookie: 'NEXT_LOCALE'` so it reads the same cookie next-intl sets, and keep `nextCookies()` last in the plugin array.
 
 ### Testing under i18n
@@ -1400,6 +1404,101 @@ If a real fallback chain is wanted, **deep-merge** English under the active loca
 - **`lucide-react` sets `aria-hidden="true"` on its SVGs.** An icon-only button therefore has an *empty* accessible name — unreachable by `getByRole('button', { name })` and announced as just "button". Give it `aria-label` (or an `sr-only` span, which is visually hidden, not visible text). A `<title>` inside the SVG won't work: `aria-hidden` removes the whole subtree.
 - **Keep such a label static.** A label that changes with state ("Switch to dark" → "Switch to light") breaks the test locator after the click. Express state with `aria-pressed` instead, which also gives a cleaner assertion than inspecting the `<html>` class.
 - **`next-themes`: `theme` vs `resolvedTheme`.** `theme` is the user's *selection* and is `'system'` by default; `resolvedTheme` is what's actually rendered. Toggling on `theme` makes the first click a no-op (`'system' !== 'light'` → sets `'light'`, which was already showing). Toggle logic must read `resolvedTheme`.
+
+---
+
+## Forms — Conform
+
+Both React Hook Form and Conform were spiked on all three forms (log in, sign up, the shared tea card). **Conform won**: less boilerplate, Server Actions keep their native `(prevState, formData)` shape, non-native inputs need a hook rather than a render-prop wrapper, and the forms still work without JavaScript.
+
+### Comparison
+
+| | React Hook Form 7.90 + `@hookform/resolvers` 5.9 | Conform 1.21 |
+|---|---|---|
+| Bundle (APIs used, min+gzip, React and Zod external) | ~14.0 KB | ~14.2 KB |
+| What gets submitted | its internal copy — `handleSubmit` clones `_formValues` | the form's own `FormData`, read from the DOM at submit |
+| Server Action input | typed values `(values) => …` | `(prevState, formData)`, unchanged from plain `useActionState` |
+| Server-returned errors | mapped onto fields by hand via `setError` (a 44-line service) | `return submission.reply()`; `lastResult` puts them on the fields |
+| Without JS | the form has no `action`, so the browser submits a GET to `/login` with email **and password in the query string** | posts to the Server Action; errors render on the server re-render, values come back from `initialValue` |
+| Non-native input (Combobox) | `<Controller render={…}>` wrapper | `useInputControl(fields.type)` → `{ value, change, blur }` |
+| shadcn | `Field` primitives take plain props, so they work with both. shadcn's older `Form` component is built on RHF (`form.tsx` imports `react-hook-form`); it isn't installed here | `Field` + spread `getInputProps(...)` |
+| Non-test `src` lines vs `main` | +395 / −322 | +377 / −413 |
+
+Bundle cost is a wash; the deciding factors are the server-error path and progressive enhancement. Neither branch needed e2e selector changes.
+
+### The shared hook
+
+```ts
+const [state, formAction] = useActionState(action, null);
+const [isPending, startTransition] = useTransition();
+
+const [form, fields] = useForm({
+    id,
+    lastResult: state,
+    defaultValue,
+    shouldValidate: 'onBlur',
+    shouldRevalidate: 'onInput',
+    constraint: getZodConstraint(schema),
+    onValidate: ({ formData }) => parseWithZod(formData, { schema }),
+    onSubmit(event, { formData }) {
+        event.preventDefault();
+        startTransition(() => formAction(formData));
+    },
+});
+
+// <form {...getFormProps(form)} action={formAction}>
+```
+
+- **Why `onSubmit` + `preventDefault`.** A `<form action>` submission goes through React's form-action path, which resets the form after the action (`requestFormReset`). Conform's reset listener then rebuilds its state *without* `lastResult`, so entered values vanish after a server error. Dispatching from `onSubmit` skips React's reset. `action={formAction}` stays on the form for the no-JS path.
+- `onSubmit` only runs once client validation has passed.
+- **Dispatch inside a transition.** Outside one, React logs "An async function with useActionState was called outside of a transition" and `isPending` doesn't update. Inside one, both `useTransition`'s and `useActionState`'s `isPending` work.
+- Make the hook generic over the **schema** and type the prefill as `DefaultValue<z.input<TSchema>>`. `DefaultValue<T>` is a conditional type; over an unresolved generic it's deferred and nothing else is assignable to it.
+
+### Pending state and double submission
+
+Plain `<form action>` put every dispatch in a transition for you. Owning `onSubmit` makes it your job, and getting it wrong fails silently:
+
+- Dispatch outside `startTransition` → `isPending` never flips → the button never disables.
+- With RHF, `formState.isSubmitting` only spans the `handleSubmit` callback. That callback returns as soon as `startTransition` is called, so a button disabled on it re-enables while the action is still in flight.
+
+Either way a second click dispatches again (`useActionState` queues it), and `logTea` creates a second row. Nothing server-side is idempotent, so the disabled button is the only guard.
+
+### Server side
+
+```ts
+const submission = parseWithZod(formData, { schema });
+if (submission.status !== 'success') {
+    return submission.reply({ hideFields: ['password'] });
+}
+try { … } catch (error) {
+    return submission.reply({ formErrors: [message], hideFields: ['password'] });
+}
+```
+
+- `SubmissionResult.error` is `Record<string, string[]>`. **Form-level errors live under the key `''`**, not `form`. Render them from `form.errors` with `id={form.errorId}`.
+- `hideFields` only removes fields from the reply payload. With JS, the password input keeps its DOM value; without JS, the server re-render has nothing to repopulate it with.
+
+### Without JavaScript (verified)
+
+With JS disabled the login form posts `multipart/form-data` to the page. The hidden inputs (`$ACTION_REF_1`, `$ACTION_KEY`, …) are **React's**, not Conform's; they tell Next which action to run. A Zod failure and a wrong-credentials error both render on the server response, with the email repopulated and the password blank.
+
+Conform renders `novalidate` by default (`defaultNoValidate: true`), so the browser never blocks a submission with its own untranslated bubble; the server is the validator. `getZodConstraint` still puts `required`/`type` on the inputs.
+
+### Gotchas
+
+- **Import from `@conform-to/zod/v4`.** The default entry targets Zod 3 and fails to load against Zod 4: `'zod' does not provide an export named 'ZodBranded'`.
+- **Empty strings arrive as `undefined`.** Conform strips them before Zod runs, so `.min(1, msg)` never fires for an empty field. Put the message on the type check: `z.string(t('nameIsRequired')).min(1, t('nameIsRequired'))`.
+- **`FieldError id={fields.x.errorId}`**, never `fields.x.id`. When a field is invalid, `getInputProps` points `aria-describedby` at `errorId`. Reusing `id` duplicates the input's id and leaves `aria-describedby` pointing at nothing.
+- `getInputProps`'s types declare `key`, but the runtime deletes it, so there's nothing to destructure out before spreading.
+- `useInputControl` gives a `string` value. Narrow it with a guard (`isTeaType`) rather than passing a generic.
+- **Type your action mocks.** A bare `vi.fn()` is `(...args: any[]) => any`, so `mockResolvedValueOnce` accepts any shape; the old `{ errors, values }` mocks compiled fine. `vi.fn<Action>()` makes tsc reject anything that isn't a `SubmissionResult`.
+
+### Where the schema lives
+
+- One factory per form in a plain module (`login/schemas.ts`, `common/teaEditCard/schemas.ts`), taking `t: Translator<'Namespace'>`. The client passes `useTranslations('LogInForm')`, the Server Action passes `await getTranslations('LogInForm')`.
+- It **can't** live in the `'use server'` file. Next's compiler rejects it: "Only async functions are allowed to be exported in a 'use server' file".
+- The client already has every message for the active locale (see *What actually reaches the browser*), so the validation namespaces are there. They now *have* to stay in the client payload.
+- A wrong namespace isn't a type error. Passing a `Tea` translator where `Translator<'EditTeaForm'>` was expected compiled, then rendered the fallback `Tea.nameIsRequired` with a console error.
 
 ---
 
