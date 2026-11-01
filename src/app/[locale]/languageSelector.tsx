@@ -49,7 +49,6 @@ const LanguageSelector = () => {
                 <DropdownMenuLabel>{t('selectLanguage')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
-                    // @ts-expect-error the type is always Language, but the shadcn component hardcodes string
                     onValueChange={changeLanguage}
                     value={language}
                 >
